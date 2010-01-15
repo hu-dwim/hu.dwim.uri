@@ -14,7 +14,7 @@
   :depends-on (:cl-fad
                :command-line-arguments
                :hu.dwim.logger
-               :hu.dwim.util
+               :hu.dwim.util.error-handling
                :iolib.syscalls)
   :components ((:module "source"
                 :components ((:file "production")
