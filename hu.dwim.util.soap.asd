@@ -14,6 +14,8 @@
   :depends-on (:babel
                :babel-streams
                :cxml
+               ;; KLUDGE: TODO: move flexml to hu.dwim.util.flexml
+               :cl-l10n
                :drakma
                :hu.dwim.defclass-star+hu.dwim.def
                :hu.dwim.logger
