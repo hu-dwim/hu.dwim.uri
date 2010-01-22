@@ -49,13 +49,21 @@
 ;;;;;;
 ;;; Whitespace
 
-(def (constant e) +whitespace-characters+ (list #\Space #\Tab #\NewLine #\Return #\Page))
+(def (constant e) +whitespace-characters+ (coerce
+                                            '(#\Space #\Tab #\Linefeed #\Return #\Page)
+                                            'simple-base-string))
 
-(def (function e) string-trim-whitespace (text)
+(def (function eio) string-trim-whitespace (text)
   (string-trim +whitespace-characters+ text))
 
-(def (function e) whitespace? (character)
-  (member character +whitespace-characters+ :test #'char=))
+(def (function eio) whitespace? (character)
+  (find character +whitespace-characters+ :test #'char=))
+
+(def (macro e) string/trim-whitespace-and-maybe-nil-it (variable)
+  `(when ,variable
+     (setf ,variable (string-trim-whitespace ,variable))
+     (when (zerop (length ,variable))
+       (setf ,variable nil))))
 
 ;;;;;;
 ;;; String concatenation
