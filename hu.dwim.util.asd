@@ -16,7 +16,7 @@
                :hu.dwim.syntax-sugar)
   :components ((:module "source"
                 :components ((:file "anaphora" :depends-on ("package"))
-                             (:file "compact-class" :depends-on ("mop" "miscellaneous"))
+                             #+sbcl(:file "compact-class" :depends-on ("mop" "miscellaneous"))
                              (:file "dynamic-context" :depends-on ("miscellaneous"))
                              (:file "generic-operator" :depends-on ("package"))
                              (:file "hash-table" :depends-on ("package"))
