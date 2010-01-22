@@ -29,7 +29,7 @@ if we strictly followed CLHS, then it should be the following:
 
 ||#
 
-(def special-variable *class-for-types* (make-hash-table :test #'equal :synchronized #t))
+(def special-variable *class-for-types* (make-hash-table :test #'equal #+sbcl :synchronized #+sbcl #t)) ;; TODO THL #+allegro?
 
 ;; TODO: type expand
 (def (function e) find-class-for-type (type)
