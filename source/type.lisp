@@ -40,6 +40,7 @@ if we strictly followed CLHS, then it should be the following:
       (setf (gethash type *class-for-types*)
             (or (when (symbolp type)
                   (find-class type nil))
+		#+sbcl ;; TODO THL #+allegro?
                 (first (sort (iter (for (key value) :in-hashtable sb-kernel::*classoid-cells*)
                                    (for class = (find-class key #f))
                                    (when (and class
