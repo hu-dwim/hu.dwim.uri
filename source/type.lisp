@@ -56,7 +56,7 @@ if we strictly followed CLHS, then it should be the following:
        (base-char 128)
        (boolean 2)
        (single-float (expt 2 32))
-       (fixnum (expt 2 #.(integer-length most-positive-fixnum)))))
+       (fixnum #.(expt 2 (integer-length most-positive-fixnum)))))
     (cons
      (case (first type)
        (eql 1)
