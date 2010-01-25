@@ -21,7 +21,7 @@
      ,@body))
 
 (def (function ioe) eval-interpret (form)
-  (bind (#+sbcl(sb-ext:*evaluator-mode* :interpret))
+  (bind (#*((:sbcl (sb-ext:*evaluator-mode* :interpret))))
     (eval form)))
 
 (def (constant e) +no-error-status-code+ 0)
