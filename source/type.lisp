@@ -35,6 +35,7 @@ if we strictly followed CLHS, then it should be the following:
 (def special-variable *class-for-types* (make-hash-table :test #'equal #+sbcl :synchronized #+sbcl #t)) ;; TODO THL #+allegro?
 
 ;; TODO: type expand
+;; TODO add error on failure or &key otherwise
 (def (function e) find-class-for-type (type)
   (or (gethash type *class-for-types*)
       (setf (gethash type *class-for-types*)
