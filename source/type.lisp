@@ -29,6 +29,9 @@ if we strictly followed CLHS, then it should be the following:
 
 ||#
 
+;; TODO use def namespace if possible to make thread-safety portable
+;; TODO the name CLASS-FOR-TYPE should be more specific. what kind of class?
+;; (def (namespace :test 'equal :finder-name %find-class-for-type) class-for-type)
 (def special-variable *class-for-types* (make-hash-table :test #'equal #+sbcl :synchronized #+sbcl #t)) ;; TODO THL #+allegro?
 
 ;; TODO: type expand
