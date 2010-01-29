@@ -75,11 +75,11 @@
 (def compiler-macro string+ (&rest args)
   `(concatenate 'string ,@args))
 
-(def (function e) join-strings (strings &key (separator #\Space))
+(def (function eo) join-strings (separator &rest strings)
   (with-output-to-string (string)
     (iter (for el :in-sequence strings)
           (unless (first-time-p)
-            (princ separator))
+            (princ separator string))
           (write-string el string))))
 
 ;;;;;;
