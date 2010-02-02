@@ -147,7 +147,8 @@
      (ecase (first otherwise)
        (:error  (apply #'error  (rest otherwise)))
        (:cerror (apply #'cerror (list* "Continue" (rest otherwise))))
-       (:warn   (apply #'warn   (rest otherwise)))))
+       (:warn   (apply #'warn   (rest otherwise))))
+     nil)
     ((functionp otherwise)
      (funcall otherwise))
     (t
