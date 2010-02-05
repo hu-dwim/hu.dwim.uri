@@ -16,7 +16,7 @@
     :documentation "Print usage help and exit"))
 
 (def (function e) process-help-command-line-argument (options arguments &key help-prefix help-suffix)
-  (when (getf arguments :h)
+  (when (getf arguments :help)
     (when help-prefix
       (format *standard-output* "~A~%~%" help-prefix))
     (command-line-arguments:show-option-help options)
@@ -35,7 +35,7 @@
     :documentation "Print version information and exit"))
 
 (def (function e) process-version-command-line-argument (arguments version-string)
-  (when (getf arguments :v)
+  (when (getf arguments :version)
     (format *standard-output* "Version: ~A~%" version-string)
     (force-output)
     (quit 0)))
@@ -50,7 +50,7 @@
     :documentation "Do not write to standard output"))
 
 (def (function e) process-quiet-command-line-argument (arguments)
-  (when (getf arguments :q)
+  (when (getf arguments :quiet)
     (setf *standard-output* (make-instance 'broadcast-stream))))
 
 ;;;;;;
