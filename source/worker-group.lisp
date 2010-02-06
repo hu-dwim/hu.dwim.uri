@@ -9,9 +9,6 @@
 ;;;;;;
 ;;; Worker threads
 
-(eval-always
-  (use-package :bordeaux-threads))
-
 (def special-variable *debug-worker* #f)
 
 (def hu.dwim.logger::logger worker-group ())
@@ -19,11 +16,11 @@
 (def class* worker-group ()
   ((worker-name :type string)
    (workers nil :type list)
-   (worker-lock (make-lock "worker-lock"))
-   (worker-condition-variable (make-condition-variable))
+   (worker-lock (bordeaux-threads:make-lock "worker-lock"))
+   (worker-condition-variable (bordeaux-threads:make-condition-variable))
    (jobs nil :type list)
-   (job-lock (make-lock "job-lock"))
-   (scheduler-condition-variable (make-condition-variable)))
+   (job-lock (bordeaux-threads:make-lock "job-lock"))
+   (scheduler-condition-variable (bordeaux-threads:make-condition-variable)))
   (:documentation "Manages a set of worker threads to process a set of jobs simultanously."))
 
 (def class* worker ()
@@ -54,7 +51,7 @@
                              (return-from run-job))))))
                    (with-thread-name " / running job"
                      (funcall job))))))
-    (with-lock-held ((worker-lock-of worker-group))
+    (bordeaux-threads:with-lock-held ((worker-lock-of worker-group))
       (deletef (workers-of worker-group) worker))
     (condition-notify (worker-condition-variable-of worker-group))))
 
@@ -62,7 +59,7 @@
   (make-instance 'worker-group :worker-name name))
 
 (def (function e) start-worker (worker-group &optional (worker-environment-function #'funcall))
-  (with-lock-held ((worker-lock-of worker-group))
+  (bordeaux-threads:with-lock-held ((worker-lock-of worker-group))
     (prog1-bind worker (make-instance 'worker :worker-group worker-group)
       (worker-group.debug "Staring new worker for ~A" worker-group)
       (setf (thread-of worker)
@@ -80,21 +77,21 @@
   (condition-notify (worker-condition-variable-of (worker-group-of worker))))
 
 (def (function e) stop-all-workers (worker-group)
-  (with-lock-held ((worker-lock-of worker-group))
+  (bordeaux-threads:with-lock-held ((worker-lock-of worker-group))
     (prog1-bind workers (workers-of worker-group)
       (dolist (worker workers)
         (setf (keep-on-running-p worker) #f))
       (condition-notify (worker-condition-variable-of worker-group)))))
 
 (def (function e) push-job (worker-group job)
-  (with-lock-held ((job-lock-of worker-group))
+  (bordeaux-threads:with-lock-held ((job-lock-of worker-group))
     (worker-group.debug "Pushing new job ~A into ~A" job worker-group)
     (push job (jobs-of worker-group))
     (condition-notify (worker-condition-variable-of worker-group))))
 
 (def (function e) pop-job (worker-group &optional (exit-condition (constantly #f)))
   (bind ((job-lock (job-lock-of worker-group)))
-    (with-lock-held (job-lock)
+    (bordeaux-threads:with-lock-held (job-lock)
       (iter (until (funcall exit-condition))
             (when-bind job (pop (jobs-of worker-group))
               (worker-group.debug "Popping job ~A from ~A" job worker-group)
@@ -104,13 +101,13 @@
             (condition-wait (worker-condition-variable-of worker-group) job-lock)))))
 
 (def (function e) delete-all-jobs (worker-group)
-  (with-lock-held ((job-lock-of worker-group))
+  (bordeaux-threads:with-lock-held ((job-lock-of worker-group))
     (setf (jobs-of worker-group) nil)
     (condition-notify (scheduler-condition-variable-of worker-group))))
 
 (def (function e) wait-until-all-jobs-are-finished (worker-group)
   (with-thread-name " / WAIT-UNTIL-ALL-JOBS-ARE-FINISHED"
     (bind ((job-lock (job-lock-of worker-group)))
-      (with-lock-held (job-lock)
+      (bordeaux-threads:with-lock-held (job-lock)
         (when (jobs-of worker-group)
           (condition-wait (scheduler-condition-variable-of worker-group) job-lock))))))
