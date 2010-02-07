@@ -98,7 +98,7 @@
               (when (null (jobs-of worker-group))
                 (bordeaux-threads:condition-notify (scheduler-condition-variable-of worker-group)))
               (return-from pop-job job))
-            (condition-wait (worker-condition-variable-of worker-group) job-lock)))))
+            (bordeaux-threads:condition-wait (worker-condition-variable-of worker-group) job-lock)))))
 
 (def (function e) delete-all-jobs (worker-group)
   (bordeaux-threads:with-lock-held ((job-lock-of worker-group))
@@ -110,4 +110,4 @@
     (bind ((job-lock (job-lock-of worker-group)))
       (bordeaux-threads:with-lock-held (job-lock)
         (when (jobs-of worker-group)
-          (condition-wait (scheduler-condition-variable-of worker-group) job-lock))))))
+          (bordeaux-threads:condition-wait (scheduler-condition-variable-of worker-group) job-lock))))))
