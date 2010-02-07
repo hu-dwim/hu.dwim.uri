@@ -53,7 +53,7 @@
                      (funcall job))))))
     (bordeaux-threads:with-lock-held ((worker-lock-of worker-group))
       (deletef (workers-of worker-group) worker))
-    (condition-notify (worker-condition-variable-of worker-group))))
+    (bordeaux-threads:condition-notify (worker-condition-variable-of worker-group))))
 
 (def (function e) make-worker-group (name)
   (make-instance 'worker-group :worker-name name))
@@ -74,20 +74,20 @@
 (def (function e) stop-worker (worker)
   (worker-group.debug "Stopping worker ~A" worker)
   (setf (keep-on-running-p worker) #f)
-  (condition-notify (worker-condition-variable-of (worker-group-of worker))))
+  (bordeaux-threads:condition-notify (worker-condition-variable-of (worker-group-of worker))))
 
 (def (function e) stop-all-workers (worker-group)
   (bordeaux-threads:with-lock-held ((worker-lock-of worker-group))
     (prog1-bind workers (workers-of worker-group)
       (dolist (worker workers)
         (setf (keep-on-running-p worker) #f))
-      (condition-notify (worker-condition-variable-of worker-group)))))
+      (bordeaux-threads:condition-notify (worker-condition-variable-of worker-group)))))
 
 (def (function e) push-job (worker-group job)
   (bordeaux-threads:with-lock-held ((job-lock-of worker-group))
     (worker-group.debug "Pushing new job ~A into ~A" job worker-group)
     (push job (jobs-of worker-group))
-    (condition-notify (worker-condition-variable-of worker-group))))
+    (bordeaux-threads:condition-notify (worker-condition-variable-of worker-group))))
 
 (def (function e) pop-job (worker-group &optional (exit-condition (constantly #f)))
   (bind ((job-lock (job-lock-of worker-group)))
@@ -96,14 +96,14 @@
             (when-bind job (pop (jobs-of worker-group))
               (worker-group.debug "Popping job ~A from ~A" job worker-group)
               (when (null (jobs-of worker-group))
-                (condition-notify (scheduler-condition-variable-of worker-group)))
+                (bordeaux-threads:condition-notify (scheduler-condition-variable-of worker-group)))
               (return-from pop-job job))
             (condition-wait (worker-condition-variable-of worker-group) job-lock)))))
 
 (def (function e) delete-all-jobs (worker-group)
   (bordeaux-threads:with-lock-held ((job-lock-of worker-group))
     (setf (jobs-of worker-group) nil)
-    (condition-notify (scheduler-condition-variable-of worker-group))))
+    (bordeaux-threads:condition-notify (scheduler-condition-variable-of worker-group))))
 
 (def (function e) wait-until-all-jobs-are-finished (worker-group)
   (with-thread-name " / WAIT-UNTIL-ALL-JOBS-ARE-FINISHED"
