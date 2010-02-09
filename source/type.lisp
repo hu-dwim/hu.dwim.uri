@@ -6,6 +6,10 @@
 
 (in-package :hu.dwim.util)
 
+(def (constant e) +top-type+ t)
+
+(def (constant e) +bottom-type+ nil)
+
 ;; TODO promote these to alexandria?
 (def (type e) function-name ()
   '(and (or symbol
