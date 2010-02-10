@@ -74,7 +74,14 @@ if we strictly followed CLHS, then it should be the following:
         (1- (length type)))
        (integer
         (when (length= type 3)
-          (1+ (- (third type) (second type)))))
+          (bind ((lower-bound (second type))
+                 (upper-bound (third type)))
+            (1+ (- (if (consp upper-bound)
+                       (1- (first upper-bound))
+                       upper-bound)
+                   (if (consp lower-bound)
+                       (1+ (first lower-bound))
+                       lower-bound))))))
        ((signed-byte unsigned-byte)
         (expt 2 (second type)))
        (simple-base-string
@@ -106,7 +113,15 @@ if we strictly followed CLHS, then it should be the following:
        (member
         (cdr type))
        (integer
-        (iter (for i :from (second type) :to (third type))
+        (iter (with lower-bound = (second type))
+              (with upper-bound = (third type))
+              (for i
+                   :from (if (consp lower-bound)
+                             (1+ (first lower-bound))
+                             lower-bound)
+                   :to (if (consp upper-bound)
+                           (1- (first upper-bound))
+                           upper-bound))
               (collect i)))
        (unsigned-byte
         (iter (for i :from 0 :below (expt 2 (second type)))
