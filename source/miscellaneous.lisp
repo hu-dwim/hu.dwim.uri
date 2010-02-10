@@ -68,14 +68,15 @@
 
 (def (function e) find-fully-qualified-symbol (name)
   (declare (type string name))
-  (when-bind position (position #\: name)
-    (bind ((package-name (subseq name 0 position))
-           (symbol-name (subseq name (or (position #\: name :start (1+ position) :test-not #'char=)
-                                         (1+ position)))))
-      (if (string= package-name "#")
-          (make-symbol symbol-name)
-          (awhen (find-package package-name)
-            (find-symbol symbol-name it))))))
+  (bind ((position (position #\: name)))
+    (when position
+      (bind ((package-name (subseq name 0 position))
+             (symbol-name (subseq name (or (position #\: name :start (1+ position) :test-not #'char=)
+                                           (1+ position)))))
+        (if (string= package-name "#")
+            (make-symbol symbol-name)
+            (awhen (find-package package-name)
+              (find-symbol symbol-name it)))))))
 
 (def (definer e :available-flags "ioed") macro/multiple-arguments-variant (singular-macro-name)
   (bind ((plural (intern (format nil "~aS" singular-macro-name))))
