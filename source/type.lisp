@@ -55,8 +55,9 @@ if we strictly followed CLHS, then it should be the following:
                              (lambda (class-1 class-2)
                                (subtypep class-2 class-1))))))))
 
-;; TODO: type expand
 (def (function e) type-instance-count-upper-bound (type)
+  #+sbcl
+  (setf type (sb-kernel::type-expand type))
   (etypecase type
     (symbol
      (case type
@@ -89,9 +90,10 @@ if we strictly followed CLHS, then it should be the following:
               (awhen (type-instance-count-upper-bound element)
                 (minimizing it))))))))
 
-;; TODO: type expand
+;; TODO: sort the result with some natural sort
 (def (function e) type-instance-list (type)
-  ;; TODO: sort the result with some natural sort
+  #+sbcl
+  (setf type (sb-kernel::type-expand type))
   (etypecase type
     (symbol
      (case type
