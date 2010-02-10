@@ -59,3 +59,25 @@
          (return
            (iter (for element :in-vector result)
                  (collect (nreverse element)))))))
+
+(def (function e) split-sequence-by-partitioning (sequence &rest predicates)
+  (iter outer
+        (with length = (length sequence))
+        (with position = 0)
+        (while (< position length))
+        (for element = (elt sequence position))
+        (for part = (iter inner
+                          (for index :from 0)
+                          (for predicate = (elt predicates index))
+                          (when (funcall predicate element)
+                            (return-from inner (subseq sequence position
+                                                       (position-if (lambda (element)
+                                                                      (or (iter (for preceding-predicate-index :from 0 :below index)
+                                                                                (thereis (funcall (elt predicates preceding-predicate-index) element)))
+                                                                          (not (funcall predicate element))))
+                                                                    sequence :start position))))))
+        (if part
+            (progn
+              (collect part)
+              (incf position (length part)))
+            (incf position))))
