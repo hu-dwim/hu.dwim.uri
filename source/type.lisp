@@ -55,47 +55,48 @@ if we strictly followed CLHS, then it should be the following:
                              (lambda (class-1 class-2)
                                (subtypep class-2 class-1))))))))
 
-(def (function e) type-instance-count-upper-bound (type)
-  #+sbcl
-  (setf type (sb-kernel::type-expand type))
-  (etypecase type
-    (symbol
-     (case type
-       ((nil) 0)
-       (null 1)
-       (base-char 128)
-       (boolean 2)
-       (single-float (expt 2 32))
-       (fixnum #.(expt 2 (integer-length most-positive-fixnum)))))
-    (cons
-     (case (first type)
-       (eql 1)
-       (member
-        (1- (length type)))
-       (integer
-        (when (length= type 3)
-          (bind ((lower-bound (second type))
-                 (upper-bound (third type)))
-            (1+ (- (if (consp upper-bound)
-                       (1- (first upper-bound))
-                       upper-bound)
-                   (if (consp lower-bound)
-                       (1+ (first lower-bound))
-                       lower-bound))))))
-       ((signed-byte unsigned-byte)
-        (expt 2 (second type)))
-       (simple-base-string
-        (expt 128 (second type)))
-       (not nil)
-       (or
-        (iter (for element :in (cdr type))
-              (aif (type-instance-count-upper-bound element)
-                   (summing it)
-                   (return nil))))
-       (and
-        (iter (for element :in (cdr type))
-              (awhen (type-instance-count-upper-bound element)
-                (minimizing it))))))))
+(def (function e) type-instance-count-upper-bound (input-type)
+  (flet ((body (type)
+           (etypecase type
+             (symbol
+              (case type
+                ((nil) 0)
+                (null 1)
+                (base-char 128)
+                (boolean 2)
+                (single-float (expt 2 32))
+                (fixnum #.(expt 2 (integer-length most-positive-fixnum)))))
+             (cons
+              (case (first type)
+                (eql 1)
+                (member
+                 (1- (length type)))
+                (integer
+                 (when (length= type 3)
+                   (bind ((lower-bound (second type))
+                          (upper-bound (third type)))
+                     (1+ (- (if (consp upper-bound)
+                                (1- (first upper-bound))
+                                upper-bound)
+                            (if (consp lower-bound)
+                                (1+ (first lower-bound))
+                                lower-bound))))))
+                ((signed-byte unsigned-byte)
+                 (expt 2 (second type)))
+                (simple-base-string
+                 (expt 128 (second type)))
+                (not nil)
+                (or
+                 (iter (for element :in (cdr type))
+                       (aif (type-instance-count-upper-bound element)
+                            (summing it)
+                            (return nil))))
+                (and
+                 (iter (for element :in (cdr type))
+                       (awhen (type-instance-count-upper-bound element)
+                         (minimizing it)))))))))
+    (or (body input-type)
+        #+sbcl (body (sb-kernel::type-expand input-type)))))
 
 ;; TODO: sort the result with some natural sort
 (def (function e) type-instance-list (type)
