@@ -17,3 +17,13 @@
   (find-thread-id thread :otherwise (lambda ()
                                       (setf (find-thread-id thread)
                                             (atomic-counter/increment *thread-id-counter*)))))
+
+(def (macro e) with-deadline ((timeout-in-seconds) &body body)
+  "As usual, TIMEOUT is in the SI unit of the scale, which is seconds. Will signal a DEADLINE-TIMEOUT when the deadline is passed."
+  #*((:sbcl `(sb-sys:with-deadline (:seconds ,timeout-in-seconds)
+               ,@body))
+     (t #.(not-yet-implemented/crucial-api 'with-deadline))))
+
+#*((:sbcl
+     (import 'sb-sys:deadline-timeout :hu.dwim.util)
+     (export 'sb-sys:deadline-timeout :hu.dwim.util)))
