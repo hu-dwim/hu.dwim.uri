@@ -66,6 +66,23 @@
        (setf ,variable nil))))
 
 ;;;;;;
+;;; make-string-of-spaces
+
+(def constant +string-of-spaces/cache-size+ 64)
+
+(def (constant :test 'equalp) +indent-length->string-of-spaces+
+  (bind ((result (make-array +string-of-spaces/cache-size+)))
+    (iter (for index :from 0 :below +string-of-spaces/cache-size+)
+          (setf (aref result index) (make-string index :initial-element #\Space)))
+    result))
+
+(def (function eo) make-string-of-spaces (count)
+  (check-type count array-index)
+  (if (< count +string-of-spaces/cache-size+)
+      (aref +indent-length->string-of-spaces+ count)
+      (make-string count :element-type 'base-char :initial-element #\Space)))
+
+;;;;;;
 ;;; String concatenation
 
 (def (function eo) string+ (&rest args)
