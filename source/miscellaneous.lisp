@@ -170,6 +170,11 @@
     (t
      otherwise)))
 
+(def (macro e) handle-otherwise* (default-form)
+  `(handle-otherwise (if ,(symbolicate '#:otherwise?)
+                         ,(symbolicate '#:otherwise)
+                         ,default-form)))
+
 (def (function e) quoted-form? (thing)
   (and (consp thing)
        (eq (car thing) 'quote)
