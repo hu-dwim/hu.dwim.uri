@@ -10,7 +10,7 @@
 
 (defsystem :hu.dwim.util.finite-state-machine
   :class hu.dwim.system
-  :description "Provides a worker group abstraction to do a bunch of shared tasks."
+  :description ""
   :depends-on (:hu.dwim.def.namespace
                :hu.dwim.defclass-star+hu.dwim.def
                :hu.dwim.util)

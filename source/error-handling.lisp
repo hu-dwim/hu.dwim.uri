@@ -31,26 +31,27 @@
      (t #.(warn "~S is not implemented for your platform. This may interfere with the behavior of CL:BREAK while the debugger is disabled..." 'with-debugger-hook-for-break)
         (-body-))))
 
-(def (with-macro* e) with-layered-error-handlers (level-1-error-handler abort-unit-of-work-callback
-                                                                        &rest args &key
-                                                                        (log-to-debug-io #t)
-                                                                        (ignore-condition-callback (constantly #f))
-                                                                        (level-2-error-handler (if log-to-debug-io
-                                                                                                   (lambda (error &key message &allow-other-keys)
-                                                                                                     (format *debug-io* "~A~%" (build-backtrace-string error :message message :timestamp (get-universal-time)))
-                                                                                                     (maybe-invoke-debugger error))
-                                                                                                   (lambda (error &key &allow-other-keys)
-                                                                                                     (maybe-invoke-debugger error))))
-                                                                        (giving-up-callback (if log-to-debug-io
-                                                                                                (lambda (&key reason &allow-other-keys)
-                                                                                                  (format *debug-io* "WITH-LAYERED-ERROR-HANDLERS is giving up due to: ~A~%" reason))
-                                                                                                (constantly nil)))
-                                                                        (out-of-storage-callback (if log-to-debug-io
-                                                                                                     (lambda (error &key &allow-other-keys)
-                                                                                                       ;; TODO if/when sbcl becomes more failure tolerant with stack overflows, we could try to log this using the logger infrastructure. until then, print something to *debug-io* and bail out...
-                                                                                                       (format *debug-io* "WITH-LAYERED-ERROR-HANDLERS is bailing out due to a STORAGE-CONDITION of type ~S~%" (type-of error)))
-                                                                                                     (constantly nil)))
-                                                                        &allow-other-keys)
+(def (with-macro* e) with-layered-error-handlers
+    (level-1-error-handler abort-unit-of-work-callback
+                           &rest args &key
+                           (log-to-debug-io #t)
+                           (ignore-condition-callback (constantly #f))
+                           (level-2-error-handler (if log-to-debug-io
+                                                      (lambda (error &key message &allow-other-keys)
+                                                        (format *debug-io* "~A~%" (build-backtrace-string error :message message :timestamp (get-universal-time)))
+                                                        (maybe-invoke-debugger error))
+                                                      (lambda (error &key &allow-other-keys)
+                                                        (maybe-invoke-debugger error))))
+                           (giving-up-callback (if log-to-debug-io
+                                                   (lambda (&key reason &allow-other-keys)
+                                                     (format *debug-io* "WITH-LAYERED-ERROR-HANDLERS is giving up due to: ~A~%" reason))
+                                                   (constantly nil)))
+                           (out-of-storage-callback (if log-to-debug-io
+                                                        (lambda (error &key &allow-other-keys)
+                                                          ;; TODO if/when sbcl becomes more failure tolerant with stack overflows, we could try to log this using the logger infrastructure. until then, print something to *debug-io* and bail out...
+                                                          (format *debug-io* "WITH-LAYERED-ERROR-HANDLERS is bailing out due to a STORAGE-CONDITION of type ~S~%" (type-of error)))
+                                                        (constantly nil)))
+                           &allow-other-keys)
   (remove-from-plistf args :log-to-debug-io :ignore-condition-callback :level-2-error-handler :giving-up-callback :out-of-storage-callback)
   (bind ((level-1-error nil))
     (labels ((ignore-error? (error)
@@ -70,7 +71,7 @@
                       nil)
                      (t
                       (funcall level-1-error-handler error)))
-                   (abort-unit-of-work "Level 1 error handler returned normally")
+                   (abort-unit-of-work "Level 1 error handler finished normally")
                    (error "This code path must not be reached in the level 1 error handler of WITH-LAYERED-ERROR-HANDLERS"))))
              (handle-level-2-error (error)
                ;; second level of error handling quarding against errors while handling the original error
