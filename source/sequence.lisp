@@ -22,6 +22,16 @@
       thing
       (list thing)))
 
+(def (function e) all-eq (list)
+  "Returns t if all elements in the LIST are eq."
+  (let ((first-element (first list)))
+    (if first-element
+	(loop for element in list
+	      when (not (eq first-element element))
+	      do (return nil)
+	      finally (return t))
+	t)))
+
 (def (function e) collect-if (predicate sequence)
   "Collects elements from SEQUENCE for which the PREDICATE is true."
   (remove-if (complement predicate) sequence))
