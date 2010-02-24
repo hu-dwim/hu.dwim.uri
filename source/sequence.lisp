@@ -22,15 +22,21 @@
       thing
       (list thing)))
 
-(def (function e) all-eq (list)
+(def (function e) all-the-same? (sequence &key (test 'eql) key)
   "Returns t if all elements in the LIST are eq."
-  (let ((first-element (first list)))
-    (if first-element
-	(loop for element in list
-	      when (not (eq first-element element))
-	      do (return nil)
-	      finally (return t))
-	t)))
+  (check-type sequence sequence)
+  (ensure-functionf test)
+  (iter (with first-element)
+        (for element :in-sequence sequence)
+        (when key
+          (setf element (funcall key element)))
+        (when (first-time-p)
+          (setf first-element element)
+          (next-iteration))
+        (unless (or (first-time-p)
+                    (funcall test first-element element))
+          (return #f))
+        (finally (return #t))))
 
 (def (function e) collect-if (predicate sequence)
   "Collects elements from SEQUENCE for which the PREDICATE is true."
