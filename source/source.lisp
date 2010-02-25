@@ -92,8 +92,10 @@
   (awhen (definition-source-text definition)
     (with-input-from-string (stream it)
       (with-find-package-kludge
-        (bind ((*readtable* (swank-backend::shebang-readtable))
-               (*package* (car (gethash definition *definition-source-texts*))))
+        (bind ((*package* (car (gethash definition *definition-source-texts*)))
+               (*readtable* (copy-readtable (swank-backend::shebang-readtable))))
+          (awhen (find-extended-package (package-name *package*) :otherwise #f)
+            (eval (hu.dwim.def::readtable-setup-form-of it)))
           (read stream nil nil))))))
 
 (def (function e) definition-source-form (definition)
