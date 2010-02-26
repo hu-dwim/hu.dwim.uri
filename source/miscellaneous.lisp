@@ -60,10 +60,10 @@
     (string+ (unless (eq package keyword-package)
                (package-name package))
              (or separator
-                 (if (or (not (eq package keyword-package))
-                         (not (eq (nth-value 1 (find-symbol symbol-name package)) :external)))
-                     "::"
-                     ":"))
+                 (if (or (eq package keyword-package)
+                         (eq (nth-value 1 (find-symbol symbol-name package)) :external))
+                     ":"
+                     "::"))
              symbol-name)))
 
 (def (function e) find-fully-qualified-symbol (name)
