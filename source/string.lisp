@@ -18,7 +18,9 @@
                                (subseq symbol-name (1+ last-colon-position))
                                symbol-name))
          (symbol-name/package (when first-colon-position
-                                (subseq symbol-name 0 first-colon-position)))
+                                (if (zerop first-colon-position)
+                                    "KEYWORD"
+                                    (subseq symbol-name 0 first-colon-position))))
          (colon-count (if first-colon-position
                           (- (1+ last-colon-position) first-colon-position)
                           0))
