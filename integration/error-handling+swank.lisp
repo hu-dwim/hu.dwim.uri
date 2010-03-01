@@ -6,11 +6,11 @@
 
 (in-package :hu.dwim.util)
 
-(def function invoke-slime-debugger (condition &key otherwise)
+(def function invoke-slime-debugger (condition &key (otherwise nil))
   (if (or swank::*emacs-connection*
           (swank::default-connection))
       (swank:swank-debugger-hook condition nil)
-      (handle-otherwise otherwise)))
+      (handle-otherwise/value otherwise :default-message "Unable to invoke Slime debugger")))
 
 (unless (fboundp 'collect-backtrace)
   (def function collect-backtrace (&key (start 4) (count 500) &allow-other-keys)

@@ -11,6 +11,9 @@
         :hu.dwim.common
         :hu.dwim.def
         :hu.dwim.syntax-sugar)
+  (:export
+   #:otherwise
+   #:otherwise?)
   (:readtable-setup
    (hu.dwim.syntax-sugar:enable-sharp-boolean-syntax)
    (hu.dwim.syntax-sugar:enable-readtime-wrapper-syntax)

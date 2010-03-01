@@ -151,29 +151,36 @@
 ;;;;;;
 ;;; Otherwise
 
-(def (function ioe) handle-otherwise (otherwise)
-  (cond
-    ((eq otherwise :error)
-     (error "Otherwise assertion failed"))
-    ((eq otherwise :cerror)
-     (cerror "Continue" "Otherwise assertion failed"))
-    ((and (consp otherwise)
-          (member (first otherwise) '(:error error :cerror cerror :warn warn) :test #'eq))
-     (assert (not (null (rest otherwise))))
-     (ecase (first otherwise)
-       ((error :error)   (apply #'error  (rest otherwise)))
-       ((cerror :cerror) (apply #'cerror (list* "Continue" (rest otherwise))))
-       ((warn :warn)     (apply #'warn   (rest otherwise))))
-     nil)
-    ((functionp otherwise)
-     (funcall otherwise))
-    (t
-     otherwise)))
+(def (function ioe) handle-otherwise/value (otherwise &key default-message)
+  (setf default-message (ensure-list default-message))
+  (case otherwise
+    (:error  (apply #'error (or default-message (list "Otherwise assertion failed"))))
+    (:cerror (apply #'cerror "Continue" (or default-message (list "Otherwise assertion failed"))))
+    (:warn   (apply #'warn (or default-message (list "Otherwise assertion failed"))))
+    (t (cond
+         ((and (consp otherwise)
+               (member (first otherwise) '(:error error :cerror cerror :warn warn) :test #'eq))
+          (assert (not (null (rest otherwise))))
+          (ecase (first otherwise)
+            ((error :error)   (apply #'error  (rest otherwise)))
+            ((cerror :cerror) (apply #'cerror (list* "Continue by returning (VALUES)" (rest otherwise))))
+            ((warn :warn)     (apply #'warn   (rest otherwise))))
+          (values))
+         ((functionp otherwise)
+          (funcall otherwise))
+         (t
+          otherwise)))))
 
-(def (macro e) handle-otherwise* (default-form)
-  `(handle-otherwise (if ,(symbolicate '#:otherwise?)
-                         ,(symbolicate '#:otherwise)
-                         ,default-form)))
+(def (macro e) handle-otherwise (&body default-error-forms)
+  `(handle-otherwise* ()
+     ,@default-error-forms))
+
+(def (macro e) handle-otherwise* ((&key default-message) &body default-forms)
+  ;; we assume two lexically visible local variables at the call site...
+  `(if otherwise?
+       (handle-otherwise/value otherwise :default-message ,default-message)
+       (progn
+         ,@default-forms)))
 
 (def (function e) quoted-form? (thing)
   (and (consp thing)

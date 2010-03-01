@@ -9,7 +9,7 @@
 ;;;;;;
 ;;; Symbols
 
-(def (function e) find-symbol* (symbol-name &key packages (otherwise nil otherwise?))
+(def (function e) find-symbol* (symbol-name &key packages (otherwise :error otherwise?))
   (check-type symbol-name string)
   (setf packages (ensure-list packages))
   (bind ((first-colon-position (position #\: symbol-name :test #'char=))
@@ -27,21 +27,23 @@
          ;; (external? (= colon-count 1))
          )
     (unless (<= colon-count 2)
-      (return-from find-symbol* (handle-otherwise* `(error "~S is not a legal symbol name" ,symbol-name))))
-    (flet ((try-in-package (package &key (otherwise nil otherwise?))
+      (return-from find-symbol* (handle-otherwise (error "~S is not a legal symbol name" symbol-name))))
+    (flet ((try-in-package (package signal-error?)
              (check-type package package)
              ;; TODO add support for external/internal handling
              (or (find-symbol symbol-name/name package)
-                 (handle-otherwise* `(error "~S does not exist in package ~A" ,symbol-name/name ,package)))))
+                 (if signal-error?
+                     (handle-otherwise (error "~S does not exist in package ~A" symbol-name/name package))
+                     nil))))
       (if symbol-name/package
           (bind ((package (find-package symbol-name/package)))
             (if package
-                (try-in-package package)
-                (handle-otherwise* `(error "Package named ~S does not exist" ,symbol-name/package))))
+                (try-in-package package #t)
+                (handle-otherwise (error "Package named ~S does not exist" symbol-name/package))))
           (or (some (lambda (package-name)
-                      (try-in-package (find-package package-name) :otherwise nil))
+                      (try-in-package (find-package package-name) #f))
                     packages)
-              (handle-otherwise* `(error "Could not find symbol named ~S in packages ~S" ,symbol-name ,packages)))))))
+              (handle-otherwise (error "Could not find symbol named ~S in packages ~S" symbol-name packages)))))))
 
 ;;;;;;
 ;;; Whitespace
