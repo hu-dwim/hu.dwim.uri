@@ -33,7 +33,7 @@
         (setf (fdefinition 'find-package) original-find-package)
         (delete-package temporary-package)))))
 
-(def function read-definition-source-text (definition)
+(def function read-definition-source-text (definition) #+sbcl ;; TODO THL something useful here
   (bind ((definition-source (if (typep definition 'sb-introspect:definition-source)
                                 definition
                                 (sb-introspect:find-definition-source definition)))

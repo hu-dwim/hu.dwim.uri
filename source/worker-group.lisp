@@ -63,7 +63,7 @@
     (prog1-bind worker (make-instance 'worker :worker-group worker-group)
       (worker-group.debug "Staring new worker for ~A" worker-group)
       (setf (thread-of worker)
-            (sb-thread:make-thread
+            (bordeaux-threads:make-thread
              (lambda ()
                (funcall worker-environment-function
                         (lambda ()
