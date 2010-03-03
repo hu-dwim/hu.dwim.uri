@@ -96,12 +96,12 @@ if we strictly followed CLHS, then it should be the following:
                        (awhen (type-instance-count-upper-bound element)
                          (minimizing it)))))))))
     (or (body input-type)
-        #+sbcl (body (sb-kernel::type-expand input-type)))))
+        #+sbcl (body (sb-ext:typexpand input-type)))))
 
 ;; TODO: sort the result with some natural sort
 (def (function e) type-instance-list (type)
   #+sbcl
-  (setf type (sb-kernel::type-expand type))
+  (setf type (sb-ext:typexpand type))
   (etypecase type
     (symbol
      (case type
