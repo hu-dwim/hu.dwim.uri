@@ -12,14 +12,16 @@
 (def special-variable *directory-for-temporary-files* nil
   "Holds the runtime value of the temporary directory, which includes the PID of the process.")
 
+(def (function e) directory-name-for-temporary-files (&key (pid (isys:%sys-getpid)))
+  (string+ (iolib.pathnames:file-path-namestring iolib.os:*temporary-directory*)
+           "/hu.dwim-"
+           (integer-to-string pid)
+           "/"))
+
 (def (function e) directory-for-temporary-files ()
   (or *directory-for-temporary-files*
       (setf *directory-for-temporary-files*
-            (ensure-directories-exist
-             (string+ (iolib.pathnames:file-path-namestring iolib.os:*temporary-directory*)
-                      "/hu.dwim-"
-                      (integer-to-string (isys:%sys-getpid))
-                      "/")))))
+            (ensure-directories-exist (directory-name-for-temporary-files)))))
 
 (def (function e) delete-directory-for-temporary-files ()
   (when *directory-for-temporary-files*
