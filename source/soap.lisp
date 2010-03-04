@@ -38,7 +38,7 @@
          (url (format nil "http://~A/~A" host service-url)))
     (hu.dwim.logger:standard-logger.debug "Sending soap request to ~A" url)
     (bind ((response (multiple-value-list
-                      (#+sbcl sb-ext:with-timeout #+sbcl 15 #-sbcl progn
+                      (with-deadline (15)
                         ;; TODO add a timeout for the socket stuff without sb-ext:with-timeout
                         (drakma:http-request url
                                              :proxy proxy
