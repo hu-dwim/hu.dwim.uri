@@ -97,6 +97,13 @@
      (t #.(warn "~S is not implemented for your platform, no profiling information will be available." 'with-profiling)
         (-body-))))
 
+(def (function e) if-symbol-exists (package name)
+  "Can be used like this: #+#.(hu.dwim.util:if-symbol-exists \"SB-C\" \"SAVE-FP-AND-PC-AROUND-ALIEN-CALL\") to only read the next form when the given symbol exists in the given package."
+  (if (and (find-package (string package))
+           (find-symbol (string name) (string package)))
+      '(:and)
+      '(:or)))
+
 ;;;;;;
 ;;; Binding related
 
