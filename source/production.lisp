@@ -56,8 +56,10 @@
                          (isys:%sys-kill pid 0)
                          #t)
                        (error "PID file ~S already exists and points to a running process ~S" pathname pid)
-                       (progn
+                       (bind ((temporary-directory (directory-name-for-temporary-files :pid pid)))
                          (format *debug-io* "Deleting stale PID file ~S pointing to non-existent PID ~S~%" pathname pid)
+                         (when (iolib.os:directory-exists-p temporary-directory)
+                           (format *debug-io* "WARNING: Seems like the previous process didn't delete its temporary directory ~S~%" temporary-directory))
                          (delete-file pathname)))))
                (handler-bind ((serious-condition
                                (lambda (error)
