@@ -33,46 +33,49 @@
         (setf (fdefinition 'find-package) original-find-package)
         (delete-package temporary-package)))))
 
-(def function read-definition-source-text (definition) #+sbcl ;; TODO THL something useful here
-  (bind ((definition-source (if (typep definition 'sb-introspect:definition-source)
-                                definition
-                                (sb-introspect:find-definition-source definition)))
-         (pathname (sb-introspect:definition-source-pathname definition-source))
-         (form-path (sb-introspect:definition-source-form-path definition-source)))
-    (handler-case
-        (cond ((null pathname)
-               (values (format nil ";; cannot determine source file for ~A" definition) nil))
-              ((not (length= 1 form-path))
-               (values (format nil ";; cannot process source form path ~A for ~A in ~A" form-path definition pathname)))
-              (t (with-input-from-file (stream pathname :element-type 'character :external-format (sb-impl::default-external-format))
-                   (with-find-package-kludge
-                     (bind ((first-form-index (car form-path))
-                            (*readtable* (swank-backend::shebang-readtable))
-                            (*package* (find-package :common-lisp-user)))
-                       (iter (for index :from 0)
-                             (for form = (handler-bind ((sb-int::simple-reader-package-error #'continue))
-                                           (read stream #f stream)))
-                             (for position = (file-position stream))
-                             (for previous-position :previous position)
-                             (declare (ignorable index position previous-position))
-                             (until (eq form stream))
-                             (when (member (first form) '(common-lisp:in-package hu.dwim.common:in-package))
-                               (setf *package* (find-package (second form)))
-                               (awhen (cdr (assoc (package-name *package*) swank:*readtable-alist* :test 'string=))
-                                 (setf *readtable* it)))
-                             (when (= first-form-index index)
-                               (file-position stream previous-position)
-                               (return-from read-definition-source-text
-                                 (values (string-trim-whitespace (iter (for char = (read-char stream nil stream))
-                                                                       (until (or (= position (file-position stream))
-                                                                                  (eq char stream)))
-                                                                       (collect char :result-type '(vector character))))
-                                         *package*)))
-                             (finally
-                              (return (values (format nil ";; cannot find source form ~A for ~A in ~A" form-path definition pathname) nil)))))))))
-        (serious-condition (condition)
-          (return-from read-definition-source-text
-            (values (format nil ";; received ~A during reading source for ~A" condition definition) nil))))))
+(def function read-definition-source-text (definition)
+  #*((:sbcl
+      (bind ((definition-source (if (typep definition 'sb-introspect:definition-source)
+                                    definition
+                                    (sb-introspect:find-definition-source definition)))
+             (pathname (sb-introspect:definition-source-pathname definition-source))
+             (form-path (sb-introspect:definition-source-form-path definition-source)))
+        (handler-case
+            (cond ((null pathname)
+                   (values (format nil ";; cannot determine source file for ~A" definition) nil))
+                  ((not (length= 1 form-path))
+                   (values (format nil ";; cannot process source form path ~A for ~A in ~A" form-path definition pathname)))
+                  (t (with-input-from-file (stream pathname :element-type 'character :external-format (sb-impl::default-external-format))
+                       (with-find-package-kludge
+                         (bind ((first-form-index (car form-path))
+                                (*readtable* (swank-backend::shebang-readtable))
+                                (*package* (find-package :common-lisp-user)))
+                           (iter (for index :from 0)
+                                 (for form = (handler-bind ((sb-int::simple-reader-package-error #'continue))
+                                               (read stream #f stream)))
+                                 (for position = (file-position stream))
+                                 (for previous-position :previous position)
+                                 (declare (ignorable index position previous-position))
+                                 (until (eq form stream))
+                                 (when (member (first form) '(common-lisp:in-package hu.dwim.common:in-package))
+                                   (setf *package* (find-package (second form)))
+                                   (awhen (cdr (assoc (package-name *package*) swank:*readtable-alist* :test 'string=))
+                                     (setf *readtable* it)))
+                                 (when (= first-form-index index)
+                                   (file-position stream previous-position)
+                                   (return-from read-definition-source-text
+                                     (values (string-trim-whitespace (iter (for char = (read-char stream nil stream))
+                                                                           (until (or (= position (file-position stream))
+                                                                                      (eq char stream)))
+                                                                           (collect char :result-type '(vector character))))
+                                             *package*)))
+                                 (finally
+                                  (return (values (format nil ";; cannot find source form ~A for ~A in ~A" form-path definition pathname) nil)))))))))
+          (serious-condition (condition)
+            (return-from read-definition-source-text
+              (values (format nil ";; received ~A during reading source for ~A" condition definition) nil))))))
+     (t
+      (values (format nil ";; cannot determine source file for ~A" definition) nil))))
 
 (def (function e) definition-source-text (definition)
   (cdr (or (gethash definition *definition-source-texts*)
