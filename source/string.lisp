@@ -59,10 +59,12 @@
   (find character +whitespace-characters+ :test #'char=))
 
 (def (macro e) string/trim-whitespace-and-maybe-nil-it (variable)
-  `(when ,variable
-     (setf ,variable (string-trim-whitespace ,variable))
-     (when (zerop (length ,variable))
-       (setf ,variable nil))))
+  `(progn
+     (when ,variable
+       (setf ,variable (string-trim-whitespace ,variable))
+       (when (zerop (length ,variable))
+         (setf ,variable nil)))
+     ,variable))
 
 ;;;;;;
 ;;; make-string-of-spaces
