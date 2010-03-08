@@ -38,17 +38,13 @@
           (return #f))
         (finally (return #t))))
 
-(def (function e) collect-if (predicate sequence)
-  "Collects elements from SEQUENCE for which the PREDICATE is true."
-  (remove-if (complement predicate) sequence))
-
-(def (function e) filter-out (element sequence &key (key #'identity) (test #'eq))
-  "Filters out element from SEQUENCE."
+(def (function e) collect (element sequence &key (key #'identity) (test #'eq))
+  "Collects elements equal to ELEMENT from SEQUENCE."
   (remove element sequence :key key :test-not test))
 
-(def (function e) filter-out-if (predicate sequence &key (key #'identity))
-  "Filters out elements from SEQUENCE for which the PREDICATE is true."
-  (remove-if (complement predicate) sequence :key key))
+(def (function e) collect-if (predicate sequence &key (key #'identity))
+  "Collects elements from SEQUENCE for which the PREDICATE is true."
+  (remove-if-not predicate sequence :key key))
 
 (def (function e) optional-list (&rest elements)
   (remove nil elements))
