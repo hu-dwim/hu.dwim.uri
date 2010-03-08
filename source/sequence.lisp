@@ -42,10 +42,6 @@
   "Collects elements from SEQUENCE for which the PREDICATE is true."
   (remove-if (complement predicate) sequence))
 
-(def (function e) collect-if-typep (type sequence)
-  "Collects elements from SEQUENCE with the given TYPE."
-  (collect-if (lambda (element) (typep element type)) sequence))
-
 (def (function e) filter-out (element sequence &key (key #'identity) (test #'eq))
   "Filters out element from SEQUENCE."
   (remove element sequence :key key :test-not test))

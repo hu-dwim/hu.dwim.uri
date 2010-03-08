@@ -136,7 +136,7 @@
   (dolist (element (append (states-of fsm) (events-of fsm) (transitions-of fsm)))
     (setf (state-machine-of element) fsm))
   (setf (start-state-of fsm) (find-if (of-type 'start-state) (states-of fsm)))
-  (setf (stop-states-of fsm) (collect-if-typep 'stop-state (states-of fsm))))
+  (setf (stop-states-of fsm) (collect-if (of-type 'stop-state) (states-of fsm))))
 
 ;; TODO: revive
 #+nil
@@ -211,7 +211,7 @@
 (def generic process-event* (instance event &rest args)
   (:method ((instance standard-object) (event-name symbol) &rest args)
     "Process a single event and change the state according to the currently available transitions. This variant searches for state-properties and fails if there's more than one."
-    (let ((state-properties (collect-if-typep 'state-property (direct-properties-of (class-of instance)))))
+    (let ((state-properties (collect-if (of-type 'state-property) (direct-properties-of (class-of instance)))))
       (if (= (length state-properties) 1)
           (apply 'process-event instance (slot-definition-name (first state-properties)) event-name args)
           (error "More than one state for ~A" instance)))))
