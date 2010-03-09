@@ -149,7 +149,7 @@
     (setf datum (concatenate 'string "Not yet implemented: " datum)))
   (apply #'cerror "Ignore and continue" datum args))
 
-(def function not-yet-implemented/crucial-api (name)
+(def (function e) not-yet-implemented/crucial-api (name)
   (warn "~S is not implemented on your platform! This may lead to runtime errors later..." name)
   `(error "~S is not implemented on your platform, sorry..." ',name))
 
