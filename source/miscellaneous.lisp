@@ -104,6 +104,35 @@
       '(:and)
       '(:or)))
 
+(def (macro e) surround-body-when (test surround-with &body body)
+  `(surround-body-when* (,test ,surround-with)
+     ,@body))
+
+(def (macro e) surround-body-when* ((test surround-with &key (body-name '-body-)) &body body)
+  (cond
+    ((eq test t)
+     `(macrolet ((,body-name ()
+                   `(progn
+                      ,',@body)))
+        (,@surround-with)))
+    ((null test)
+     `(progn
+        ,@body))
+    (t `(flet ((,body-name ()
+                 ,@body))
+          (declare (dynamic-extent #',body-name))
+          (if ,test
+              (,@surround-with)
+              (,body-name))))))
+
+(def (macro e) surround-body-unless (test surround-with &body body)
+  `(surround-body-when* ((not ,test) ,surround-with)
+     ,@body))
+
+(def (macro e) surround-body-unless* ((test surround-with &key (body-name '-body-)) &body body)
+  `(surround-body-when* ((not ,test) ,surround-with :body-name ,body-name)
+     ,@body))
+
 ;;;;;;
 ;;; Binding related
 
