@@ -13,7 +13,7 @@
   (:method (context error)
     *debug-on-error*))
 
-(def (function e) best-effort-log-error (&optional message &rest args)
+(def (function e) print-error-safely (&optional message &rest args)
   (when message
     (bind ((formatted (or (ignore-errors
                             (apply #'format nil message args))
