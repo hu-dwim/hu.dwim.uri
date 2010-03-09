@@ -26,53 +26,33 @@
           config-file-name)
         nil)))
 
-(def (with-macro* e) with-pid-file-logic (pathname &key optional)
-  (check-type pathname (or null pathname string))
-  (assert (or optional pathname))
+(def (with-macro* e) with-pid-file (pathname)
+  (check-type pathname (or pathname string))
   (bind ((pid-file-has-been-created? #f))
-    (labels ((cleanup-pid-file ()
-               (when pid-file-has-been-created?
-                 (unless (ignore-errors
-                           (delete-file pathname)
-                           #t)
-                   (format *debug-io* "Failed to remove pid file ~S~%" pathname))))
-             (startup-signal-handler (signal code scp)
-               (declare (ignore signal code scp))
-               (format *debug-io* "SIGTERM/SIGINT was received while starting up, exiting abnormally~%")
-               (cleanup-pid-file)
-               (quit 2)))
-      (unwind-protect
-           (progn
-             #*((:sbcl
-                 (sb-sys:enable-interrupt sb-unix:sigterm #'startup-signal-handler)
-                 (sb-sys:enable-interrupt sb-unix:sigint #'startup-signal-handler)
-                 (format *debug-io* "Temporary startup signal handlers are installed~%"))
-                (t (warn "No support for installing signal handlers on your implementation, stale PID files may remain")))
-             (when pathname
-               (format *debug-io* "Writing pid file ~S~%" pathname)
-               (when (cl-fad:file-exists-p pathname)
-                 (bind ((pid (parse-integer (read-file-into-string pathname))))
-                   (if (ignore-errors
-                         (isys:%sys-kill pid 0)
-                         #t)
-                       (error "PID file ~S already exists and points to a running process ~S" pathname pid)
-                       (bind ((temporary-directory (directory-name-for-temporary-files :pid pid)))
-                         (format *debug-io* "Deleting stale PID file ~S pointing to non-existent PID ~S~%" pathname pid)
-                         (when (iolib.os:directory-exists-p temporary-directory)
-                           (format *debug-io* "WARNING: Seems like the previous process didn't delete its temporary directory ~S~%" temporary-directory))
-                         (delete-file pathname)))))
-               (handler-bind ((serious-condition
-                               (lambda (error)
-                                 (best-effort-log-error "Failed to write PID file ~S because: ~A" pathname error)
-                                 (quit 1))))
-                 (with-open-file (pid-stream pathname :direction :output
-                                             :element-type 'character
-                                             :if-exists :error)
-                   (princ (isys:%sys-getpid) pid-stream)))
-               (setf pid-file-has-been-created? #t)
-               (format *debug-io* "PID file is ~S, PID is ~A~%" pathname (isys:%sys-getpid)))
-             (-body-))
-        (cleanup-pid-file)))))
+    (unwind-protect
+         (progn
+           (format *debug-io* "Writing pid file ~S~%" pathname)
+           (when (cl-fad:file-exists-p pathname)
+             (bind ((pid (parse-integer (read-file-into-string pathname))))
+               (if (ignore-errors
+                     (isys:%sys-kill pid 0)
+                     #t)
+                   (error "PID file ~S already exists and points to a running process ~S" pathname pid)
+                   (progn
+                     (format *debug-io* "Deleting stale PID file ~S pointing to non-existent PID ~S~%" pathname pid)
+                     (delete-file pathname)))))
+           (with-open-file (pid-stream pathname :direction :output
+                                       :element-type 'character
+                                       :if-exists :error)
+             (princ (isys:%sys-getpid) pid-stream))
+           (setf pid-file-has-been-created? #t)
+           (format *debug-io* "PID file is ~S, PID is ~A~%" pathname (isys:%sys-getpid))
+           (-with-macro/body-))
+      (when pid-file-has-been-created?
+        (unless (ignore-errors
+                  (delete-file pathname)
+                  #t)
+          (print-error-safely "Failed to remove pid file ~S~%" pathname))))))
 
 (def (with-macro e) with-save-core-and-die-restart ()
   (restart-case
