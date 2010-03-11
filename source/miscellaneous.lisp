@@ -41,7 +41,7 @@
       ("txt" :text)
       ("text" :text)
       (t
-       ;; TODO this is a bit too heavy-weight, both on dependencies and runtime implications...
+       ;; TODO the runtime consequences of this are a bit heavy...
        #*((:sbcl
            (bind ((result (with-output-to-string (output)
                             (sb-ext:run-program "/usr/bin/file" (list (namestring pathname)) :output output))))

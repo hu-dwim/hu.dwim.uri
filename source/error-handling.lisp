@@ -106,7 +106,7 @@
                    (format *debug-io* "~&WITH-LAYERED-ERROR-HANDLERS/DEBUGGER-HOOK is invoked, most probably because of CL:BREAK (if not, then that's a big WTF?!)~%"))
                  (maybe-invoke-debugger condition)))
           (with-debugger-hook-for-break #'with-layered-error-handlers/debugger-hook
-            (-body-)))))))
+            (-with-macro/body-)))))))
 
 (def (function e) maybe-invoke-debugger (condition &key context)
   (when (debug-on-error? context condition)
