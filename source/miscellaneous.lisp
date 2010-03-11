@@ -73,10 +73,13 @@
       (bind ((package-name (subseq name 0 position))
              (symbol-name (subseq name (or (position #\: name :start (1+ position) :test-not #'char=)
                                            (1+ position)))))
-        (if (string= package-name "#")
-            (make-symbol symbol-name)
-            (awhen (find-package package-name)
-              (find-symbol symbol-name it)))))))
+        (cond ((string= package-name "")
+               (find-symbol symbol-name :keyword))
+              ((string= package-name "#")
+               (make-symbol symbol-name))
+              (t
+               (awhen (find-package package-name)
+                 (find-symbol symbol-name it))))))))
 
 (def (definer e :available-flags "ioed") macro/multiple-arguments-variant (singular-macro-name)
   (bind ((plural (intern (format nil "~aS" singular-macro-name))))
