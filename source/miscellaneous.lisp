@@ -57,14 +57,16 @@
   (bind ((symbol-name (symbol-name symbol))
          (package (symbol-package symbol))
          (keyword-package (load-time-value (find-package "KEYWORD"))))
-    (string+ (unless (eq package keyword-package)
-               (package-name package))
-             (or separator
-                 (if (or (eq package keyword-package)
-                         (eq (nth-value 1 (find-symbol symbol-name package)) :external))
-                     ":"
-                     "::"))
-             symbol-name)))
+    (if package
+        (string+ (unless (eq package keyword-package)
+                   (package-name package))
+                 (or separator
+                     (if (or (eq package keyword-package)
+                             (eq (nth-value 1 (find-symbol symbol-name package)) :external))
+                         ":"
+                         "::"))
+                 symbol-name)
+        (string+ "#:" symbol-name))))
 
 (def (function e) find-fully-qualified-symbol (name)
   (declare (type string name))
