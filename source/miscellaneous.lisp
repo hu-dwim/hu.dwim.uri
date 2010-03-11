@@ -158,6 +158,9 @@
     (setf datum (concatenate 'string "Operation not supported: " datum)))
   (apply #'error datum args))
 
+(def (macro e) to-boolean (form)
+  `(not (not ,form)))
+
 ;;;;;;
 ;;; Thread name
 
