@@ -68,20 +68,13 @@
                  symbol-name)
         (string+ "#:" symbol-name))))
 
-(def (function e) find-fully-qualified-symbol (name)
-  (declare (type string name))
-  (bind ((position (position #\: name)))
-    (when position
-      (bind ((package-name (subseq name 0 position))
-             (symbol-name (subseq name (or (position #\: name :start (1+ position) :test-not #'char=)
-                                           (1+ position)))))
-        (cond ((string= package-name "")
-               (find-symbol symbol-name :keyword))
-              ((string= package-name "#")
-               (make-symbol symbol-name))
-              (t
-               (awhen (find-package package-name)
-                 (find-symbol symbol-name it))))))))
+;; TODO switch the default of :otherwise to :error by delegating it to find-symbol*
+(def (function e) find-fully-qualified-symbol (name &key (otherwise nil))
+  "The inverse of FULLY-QUALIFIED-SYMBOL-NAME. Does not INTERN but it does instantiate package-less symbols."
+  (check-type name string)
+  (if (starts-with-subseq "#:" name)
+      (make-symbol (subseq name 2))
+      (find-symbol* name :packages '() :otherwise otherwise)))
 
 (def (definer e :available-flags "ioed") macro/multiple-arguments-variant (singular-macro-name)
   (bind ((plural (intern (format nil "~aS" singular-macro-name))))
