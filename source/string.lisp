@@ -83,6 +83,9 @@
       (aref +indent-length->string-of-spaces+ count)
       (make-string count :element-type 'base-char :initial-element #\Space)))
 
+(def (function e) write-spaces (count &optional (stream *standard-output*))
+  (write-string (make-string-of-spaces count) stream))
+
 ;;;;;;
 ;;; String concatenation
 
