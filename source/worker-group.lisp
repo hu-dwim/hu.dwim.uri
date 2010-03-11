@@ -9,9 +9,7 @@
 ;;;;;;
 ;;; Worker threads
 
-(def special-variable *debug-worker* #f)
-
-(def hu.dwim.logger::logger worker-group ())
+(def hu.dwim.logger:logger worker-group ())
 
 (def class* worker-group ()
   ((worker-name :type string)
@@ -25,35 +23,30 @@
 
 (def class* worker ()
   ((worker-group :type worker-group)
-   (keep-on-running #t :type boolean)
+   (keep-on-running #t :type boolean :accessor keep-on-running?)
    (thread :type t)))
 
 (def function worker-loop (worker-group worker)
   (unwind-protect
-       (iter (while (keep-on-running-p worker))
+       (iter (while (keep-on-running? worker))
              (for job = (pop-job worker-group
                                  (lambda ()
-                                   (not (keep-on-running-p worker)))))
+                                   (not (keep-on-running? worker)))))
              (when job
-               (block run-job
-                 ;; TODO use hu.dwim.util:with-layered-error-handlers and other error handling stuff
-                 (handler-bind
-                     ((serious-condition
-                       (lambda (condition)
-                         (with-thread-name " / handling a serious condition"
-                           (unless *debug-worker*
-                             ;; TODO: follow error handling changes and support in util
-                             (worker-group.error "Got condition ~A within worker ~A in ~A skipping job ~A.~%~A"
-                                                 condition worker worker-group job
-                                                 ;; letting errors fly through here would not be funny...
-                                                 (ignore-errors
-                                                   (build-backtrace-string condition)))
-                             (return-from run-job))))))
-                   (with-thread-name " / running job"
-                     (funcall job))))))
+               (worker-loop/run-one-job worker-group worker job)))
     (bordeaux-threads:with-lock-held ((worker-lock-of worker-group))
       (deletef (workers-of worker-group) worker))
     (bordeaux-threads:condition-notify (worker-condition-variable-of worker-group))))
+
+(def function worker-loop/run-one-job (worker-group worker job)
+  (with-layered-error-handlers ((lambda (error)
+                                  (worker-group.error (build-backtrace-string error :message (format nil "Error reached toplevel in worker ~A while executing job ~A" worker job)))
+                                  (maybe-invoke-debugger error :context worker-group))
+                                (lambda (&rest args)
+                                  (declare (ignore args))
+                                  (return-from worker-loop/run-one-job)))
+    (with-thread-name " / running job"
+      (funcall job))))
 
 (def (function e) make-worker-group (name)
   (make-instance 'worker-group :worker-name name))
@@ -73,14 +66,14 @@
 
 (def (function e) stop-worker (worker)
   (worker-group.debug "Stopping worker ~A" worker)
-  (setf (keep-on-running-p worker) #f)
+  (setf (keep-on-running? worker) #f)
   (bordeaux-threads:condition-notify (worker-condition-variable-of (worker-group-of worker))))
 
 (def (function e) stop-all-workers (worker-group)
   (bordeaux-threads:with-lock-held ((worker-lock-of worker-group))
     (prog1-bind workers (workers-of worker-group)
       (dolist (worker workers)
-        (setf (keep-on-running-p worker) #f))
+        (setf (keep-on-running? worker) #f))
       (bordeaux-threads:condition-notify (worker-condition-variable-of worker-group)))))
 
 (def (function e) push-job (worker-group job)
