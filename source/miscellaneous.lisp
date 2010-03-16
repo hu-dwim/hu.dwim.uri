@@ -253,3 +253,8 @@
       (if (funcall test list old)
           new
           list)))
+
+(def (function e) find-function (name &key (otherwise :error otherwise?))
+  (if (fboundp name)
+      (fdefinition name)
+      (handle-otherwise (error "The function ~A is undefined" name))))
