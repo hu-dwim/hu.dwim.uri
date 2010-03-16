@@ -32,7 +32,7 @@
 (def layer authorization-layer (hu.dwim.partial-eval:standard-partial-eval-layer)
   ())
 
-(def layered-method hu.dwim.partial-eval::inline-function-call? :in authorization-layer ((ast hu.dwim.walker:free-application-form) name arguments)
+(def layered-method hu.dwim.partial-eval:inline-function-call? :in authorization-layer ((ast hu.dwim.walker:free-application-form) name arguments)
   (or (find-authorization name :otherwise #f)
       (contextl:call-next-layered-method)))
 
