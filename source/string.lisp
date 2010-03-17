@@ -86,6 +86,10 @@
 (def (function e) write-spaces (count &optional (stream *standard-output*))
   (write-string (make-string-of-spaces count) stream))
 
+(def (function e) write-characters (character count &optional (stream *standard-output*))
+  (iter (repeat count)
+        (write-char character stream)))
+
 ;;;;;;
 ;;; String concatenation
 
