@@ -28,7 +28,7 @@
                              (:file "package")
                              (:file "place" :depends-on ("package"))
                              (:file "sequence" :depends-on ("package"))
-                             (:file "string" :depends-on ("package"))
+                             (:file "string" :depends-on ("miscellaneous"))
                              (:file "threads-early" :depends-on ("package"))
                              (:file "type" :depends-on ("package"))
                              (:file "miscellaneous" :depends-on ("package"))))))
