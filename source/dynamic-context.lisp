@@ -20,6 +20,7 @@
   (assert (or (not struct-options) create-struct) () "STRUCT-OPTIONS while no CREATE-STRUCT?")
   (assert (not (and create-class create-struct)) () "Only one of CREATE-CLASS and CREATE-STRUCT is allowed.")
   (bind ((special-var-name (symbolicate "*" name "*"))
+         ;; TODO append a question mark to has-checker-name
          (has-checker-name (symbolicate '#:has- name))
          (in-macro-name (symbolicate '#:in- name))
          (with-new-macro-name (symbolicate '#:with-new- name))
