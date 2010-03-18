@@ -56,9 +56,12 @@
                                        (< (funcall (comparator-of mapping) mapper-1 mapper-2) 0)))))))))
 
 (def function insert-mapper (mapping mapper)
-  (bind (((:slots mappers cache) mapping))
-    (pushnew mapper mappers :test (lambda (mapper-1 mapper-2)
-                                    (zerop (funcall (comparator-of mapping) mapper-1 mapper-2))))
+  (bind (((:slots mappers cache) mapping)
+         (old-mapper (find mapper mappers :test (lambda (mapper-1 mapper-2)
+                                                  (zerop (funcall (comparator-of mapping) mapper-1 mapper-2))))))
+    (when old-mapper
+      (setf mappers (remove old-mapper mappers)))
+    (pushnew mapper mappers)
     (clrhash cache)))
 
 ;;;;;;
