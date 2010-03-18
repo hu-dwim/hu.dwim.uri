@@ -20,7 +20,7 @@
   (declare (type integer integer)
            (type (or null fixnum) minimum-column-count)
            (type fixnum maximum-digit-count))
-  (if (< integer +integer-to-string-cache-size+)
+  (if (< -1 integer +integer-to-string-cache-size+)
       (aref +cached-integer-names+ integer)
       (bind ((remainder integer)
              (digit 0)
