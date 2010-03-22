@@ -9,7 +9,7 @@
 ;;;;;;
 ;;; Definer
 
-(def namespace authorization)
+(def (namespace e) authorization)
 
 (def (definer e) authorization (name arguments &body body)
   `(progn
