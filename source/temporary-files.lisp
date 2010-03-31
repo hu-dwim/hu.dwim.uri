@@ -59,3 +59,6 @@
                        args))
     (until file)
     (finally (return (values file file-name)))))
+
+(def (function e) substitute-illegal-characters-in-file-name (name &key (replacement "_"))
+  (cl-ppcre:regex-replace-all "[/?*\"]" name replacement))
