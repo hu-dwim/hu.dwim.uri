@@ -9,7 +9,9 @@
 (def function invoke-slime-debugger (condition &key (otherwise nil))
   (if (or swank::*emacs-connection*
           (swank::default-connection))
-      (swank:swank-debugger-hook condition nil)
+      ;; tell the debugger to hide the upcoming (uninteresting) frames...
+      (bind (#+sbcl(sb-debug:*stack-top-hint* (sb-di:top-frame)))
+        (swank:swank-debugger-hook condition nil))
       (handle-otherwise/value otherwise :default-message "Unable to invoke Slime debugger")))
 
 (unless (fboundp 'collect-backtrace)
