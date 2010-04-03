@@ -89,3 +89,9 @@
               (collect part)
               (incf position (length part)))
             (incf position))))
+
+(def (function e) substitute-all (old-elements new-element sequence &key (test #'eql) (start 0) count end key from-end)
+  (bind ((sequence (copy-seq sequence)))
+    (iter (for old-element :in-sequence old-elements)
+          (nsubstitute new-element old-element sequence :test test :key key :start start :count count :end end :from-end from-end))
+    sequence))
