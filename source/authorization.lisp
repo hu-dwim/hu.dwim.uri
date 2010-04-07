@@ -18,13 +18,12 @@
      (setf (find-authorization ',name) (fdefinition ',name))))
 
 (def (definer e) authorization/function-call (name arguments &body body)
-  (with-unique-names (form)
-    `(def authorization ,name (,form)
-       (bind ((-name- (car ,form))
-              ,@(when arguments
-                 `((,arguments (cdr ,form)))))
-         (declare (ignorable -name-))
-         ,@body))))
+  `(def authorization ,name (-form-)
+     (bind ((-name- (car -form-))
+            ,@(when arguments
+               `((,arguments (cdr -form-)))))
+       (declare (ignorable -name-))
+       ,@body)))
 
 ;;;;;;
 ;;; Partial eval
