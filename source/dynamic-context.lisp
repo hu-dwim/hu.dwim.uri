@@ -20,8 +20,7 @@
   (assert (or (not struct-options) create-struct) () "STRUCT-OPTIONS while no CREATE-STRUCT?")
   (assert (not (and create-class create-struct)) () "Only one of CREATE-CLASS and CREATE-STRUCT is allowed.")
   (bind ((special-var-name (symbolicate "*" name "*"))
-         ;; TODO append a question mark to has-checker-name
-         (has-checker-name (symbolicate '#:has- name))
+         (has-checker-name (symbolicate '#:has- name "?"))
          (in-macro-name (symbolicate '#:in- name))
          (with-new-macro-name (symbolicate '#:with-new- name))
          (with-macro-name (symbolicate '#:with- name))
@@ -77,7 +76,6 @@
                             ``((,parent (when (,',has-checker-name)
                                           ,',special-var-name))))
                    (,',special-var-name ,context-instance))
-              (declare (special ,',special-var-name)) ; KLUDGE with-call/cc in needs it currently
               ,@,(when chain-parents
                        ``((setf (,',(if create-struct
                                         (symbolicate struct-conc-name '#:parent-context)
@@ -87,7 +85,8 @@
                 (error ,',(string+ "Called with nil " (string-downcase name))))
               ,@forms)))
        (defun ,has-checker-name ()
-         (boundp ',special-var-name)))))
+         (and (boundp ',special-var-name)
+              ,special-var-name)))))
 
 (def (macro e) define-dynamic-context* (name direct-slots &rest args &key (defclass-macro-name 'defclass*) &allow-other-keys)
   (remove-from-plistf args :defclass-macro-name)
