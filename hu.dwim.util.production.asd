@@ -15,6 +15,7 @@
                :command-line-arguments
                :hu.dwim.logger
                :hu.dwim.util.error-handling
+               :hu.dwim.util.temporary-files
                :iolib.syscalls)
   :components ((:module "source"
                 :components ((:file "production")

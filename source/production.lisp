@@ -34,9 +34,7 @@
            (format *debug-io* "Writing pid file ~S~%" pathname)
            (when (cl-fad:file-exists-p pathname)
              (bind ((pid (parse-integer (read-file-into-string pathname))))
-               (if (ignore-errors
-                     (isys:%sys-kill pid 0)
-                     #t)
+               (if (posix-process-exists? pid)
                    (error "PID file ~S already exists and points to a running process ~S" pathname pid)
                    (progn
                      (format *debug-io* "Deleting stale PID file ~S pointing to non-existent PID ~S~%" pathname pid)
@@ -53,6 +51,14 @@
                   (delete-file pathname)
                   #t)
           (print-error-safely "Failed to remove pid file ~S~%" pathname))))))
+
+(def (with-macro* e) with-temporary-directory (&key (cleanup #t))
+  (when cleanup
+    (cleanup-temporary-directories))
+  (directory-for-temporary-files)
+  (multiple-value-prog1
+      (-with-macro/body-)
+    (delete-directory-for-temporary-files)))
 
 (def (with-macro e) with-save-core-and-die-restart ()
   (restart-case

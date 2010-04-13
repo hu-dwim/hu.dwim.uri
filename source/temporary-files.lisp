@@ -12,9 +12,19 @@
 (def special-variable *directory-for-temporary-files* nil
   "Holds the runtime value of the temporary directory, which includes the PID of the process.")
 
+(def constant +temporary-directory-name-prefix+ "hu.dwim-")
+
+;; TODO not here, but where else? iolib is needed...
+(def (function e) posix-process-exists? (pid)
+  (ignore-errors
+    (isys:%sys-kill pid 0)
+    #t))
+
 (def (function e) directory-name-for-temporary-files (&key (pid (isys:%sys-getpid)))
+  ;; NOTE: unexpressed abstraction: this file name structure is assumed in CLEANUP-TEMPORARY-DIRECTORIES
   (string+ (iolib.pathnames:file-path-namestring iolib.os:*temporary-directory*)
-           "/hu.dwim-"
+           "/"
+           +temporary-directory-name-prefix+
            (integer-to-string pid)
            "/"))
 
@@ -26,7 +36,31 @@
 (def (function e) delete-directory-for-temporary-files ()
   (when *directory-for-temporary-files*
     (iolib.os:delete-files *directory-for-temporary-files* :recursive #t)
-    (setf *directory-for-temporary-files* nil)))
+    (setf *directory-for-temporary-files* nil))
+  (values))
+
+(def (function e) cleanup-temporary-directories ()
+  "Tries to delete all temporary directories that have been created by this library by a process not running anymore."
+  (bind ((deleted ()))
+    (flet ((temporary-directory-of-dead-process? (pathname kind)
+             (bind ((name (iolib.pathnames:file-path-namestring pathname)))
+               (when (and (eq kind :directory)
+                          (starts-with-subseq +temporary-directory-name-prefix+ name))
+                 (bind (((:values pid position) (ignore-errors (parse-integer name :start (length +temporary-directory-name-prefix+)))))
+                   (and pid
+                        (= position (length name))
+                        (not (posix-process-exists? pid)))))))
+           (delete-temporary-directory (pathname kind parent depth)
+             (declare (ignore kind parent depth))
+             (ignore-errors
+               ;; we may be lacking the permission, etc...
+               (iolib.os:delete-files pathname :recursive #t)
+               (push pathname deleted))))
+      (iolib.os:walk-directory iolib.os:*temporary-directory*
+                               #'delete-temporary-directory
+                               :maxdepth 1
+                               :test #'temporary-directory-of-dead-process?))
+    deleted))
 
 (def (function e) filename-for-temporary-file (&optional name-prefix)
   (string+ (directory-for-temporary-files)
