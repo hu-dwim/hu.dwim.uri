@@ -32,6 +32,16 @@
           :report "Continue processing the error as if the debugger was not available"))))
   (values))
 
+(def (function e) collect-backtrace (&key (start 0) count)
+  (if (fboundp 'collect-backtrace/impl)
+      (funcall 'collect-backtrace/impl :start start :count count)
+      (format t "[Backtrace is not available, see ~S for details.]" 'collect-backtrace)))
+
+(def (function e) collect-call-path (&key (start 0) count)
+  (if (fboundp 'collect-call-path/impl)
+      (funcall 'collect-call-path/impl :start start :count count)
+      (format t "[Call path is not available, see ~S for details.]" 'collect-call-path/impl)))
+
 ;;;;;;
 ;;; Error log decorators
 

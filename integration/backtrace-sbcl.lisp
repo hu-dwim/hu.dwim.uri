@@ -29,10 +29,13 @@
                                       "<error printing value>")))
               (format stream "~%---- ~S: ~A" var printed-value))))))))
 
-(def function collect-backtrace (&key (start 0) (count sb-debug::*default-backtrace-size-limit*)
-                                      ((:verbosity sb-debug::*verbosity*) sb-debug::*verbosity*)
-                                      (print-frame-source (> sb-debug::*verbosity* 1))
-                                      &allow-other-keys)
+(def function collect-backtrace/impl (&key (start 0) count
+                                           ((:verbosity sb-debug::*verbosity*) sb-debug::*verbosity*)
+                                           (print-frame-source (> sb-debug::*verbosity* 1))
+                                           &allow-other-keys)
+  (unless count
+    (setf count sb-debug::*default-backtrace-size-limit*))
+  (setf start (+ start 10))
   (bind ((backtrace ())
          (*current-backtrace-special-variable-values* (make-hash-table :test 'eq)))
     (sb-debug::map-backtrace
@@ -53,5 +56,19 @@
                                      (format nil "<<< Error while printing frame: ~S >>>" error))))))
          (push frame-as-string backtrace)))
      :start start :count count)
-    (nreversef backtrace)
-    backtrace))
+    (nreverse backtrace)))
+
+(def function collect-call-path/impl (&key (start 0) count
+                                           ((:verbosity sb-debug::*verbosity*) sb-debug::*verbosity*)
+                                           &allow-other-keys)
+  (unless count
+    (setf count sb-debug::*default-backtrace-size-limit*))
+  (setf start (+ start 4))
+  (bind ((call-path ()))
+    (sb-debug::map-backtrace
+     (lambda (frame)
+       (bind (((:values name args kind) (sb-debug::frame-call frame)))
+         (declare (ignore args kind))
+         (push name call-path)))
+     :start start :count count)
+    (nreverse call-path)))
