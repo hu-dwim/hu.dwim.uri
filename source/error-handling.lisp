@@ -129,7 +129,7 @@
                  :local-variables local-variables
                  :source-location source-location))
 
-(def with-macro with-backtrace-bindings ()
+(def with-macro with-backtrace-printer-bindings ()
   (bind ((bindings `((*print-pretty*           . #t)
                      (*print-level*            . 3)
                      (*print-length*           . 100)
@@ -155,7 +155,7 @@
 
 (def (function e) build-backtrace-string (error &key message timestamp)
   "Message may also be a list, in which case FORMAT is applied on it."
-  (with-backtrace-bindings
+  (with-backtrace-printer-bindings
     (block building
       (with-layered-error-handlers ((lambda (nested-error)
                                       (return-from building (format nil "Failed to build backtrace due to: ~A. The orignal error was: ~A" nested-error error)))
