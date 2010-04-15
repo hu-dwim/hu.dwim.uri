@@ -6,6 +6,20 @@
 
 (in-package :hu.dwim.util)
 
+(def special-variable *developer-machine-names*
+  '("ed101"
+    "aquaduct"
+    "tsunami"
+    "nietzsche-ubuntu"
+    "tyrion"
+    "mnorbi-laptop"
+    "tomi137"
+    "think"
+    "ojjektum"))
+
+(def (function e) running-on-developer-machine? ()
+  (member (machine-instance) *developer-machine-names* :test #'string=))
+
 ;;;;;;
 ;;; Production support
 
