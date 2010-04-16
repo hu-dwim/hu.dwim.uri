@@ -88,7 +88,7 @@
          (and (boundp ',special-var-name)
               ,special-var-name)))))
 
-(def (macro e) define-dynamic-context* (name direct-slots &rest args &key (defclass-macro-name 'defclass*) &allow-other-keys)
+(def (macro e) define-dynamic-context* (name direct-slots &rest args &key (defclass-macro-name 'hu.dwim.defclass-star:defclass*) &allow-other-keys)
   (remove-from-plistf args :defclass-macro-name)
   `(define-dynamic-context ,name ,direct-slots
      :defclass-macro-name ,defclass-macro-name
