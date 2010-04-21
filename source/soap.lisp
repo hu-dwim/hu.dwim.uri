@@ -15,13 +15,13 @@
   (def (function e) with-quasi-quoted-soap-xml-to-string-emitting-form-syntax ()
     (hu.dwim.quasi-quote.xml:with-quasi-quoted-xml-to-string-emitting-form-syntax '*soap-stream*)))
 
-(def macro emit-soap-request-to-string (&body forms)
+(def (macro e) emit-soap-request-to-string (&body forms)
   `(with-output-to-string (*soap-stream*)
      (hu.dwim.quasi-quote:emit ,@forms)))
 
 (def (constant e) +xml-namespace-uri/soap+ "http://www.w3.org/2003/05/soap-envelope")
 
-(def function make-soap-envelope (body)
+(def (function e) make-soap-envelope (body)
   {with-quasi-quoted-soap-xml-to-string-emitting-form-syntax
     (hu.dwim.quasi-quote::as-delayed-emitting
       (hu.dwim.quasi-quote.xml:emit-xml-prologue :encoding :utf-8 :stream *soap-stream* :version "1.0")
@@ -50,29 +50,17 @@
         (setf (first response) (babel:octets-to-string (coerce (first response) '(vector (unsigned-byte 8))) :encoding :utf-8)))
       (values-list response))))
 
-(def function parse-soap-envelope/flexml (string)
-  (cxml:parse string (flexml:make-flexml-builder :default-package *package*
-                                                 :default-node-class 'flexml:flexml-node)))
+(def (function e) parse-soap-envelope/flexml (string)
+  (cxml:parse string (hu.dwim.util.flexml:make-builder :default-package *package*
+                                                       :default-node-class 'hu.dwim.util.flexml:node
+                                                       :drop-whitespace #t)))
 
-(def function soap-envelope-body/flexml (envelope)
-  (first-elt (flexml:children-of (first-elt (flexml::children-of envelope)))))
+(def (function e) soap-envelope-body/flexml (envelope)
+  (first-elt (hu.dwim.util.flexml:children-of (first-elt (hu.dwim.util.flexml:children-of envelope)))))
 
-(def function parse-soap-envelope/dom (string)
+(def (function e) parse-soap-envelope/dom (string)
   (labels ((dummy-entity-resolver (public-id system-id)
              (declare (ignore public-id system-id))
              (babel-streams:make-in-memory-input-stream #())))
     (cxml:parse string (cxml-dom:make-dom-builder) :entity-resolver #'dummy-entity-resolver)))
 
-(def macro flexml-node-name-eswitch (value &body forms)
-  (once-only (value)
-    `(when (typep ,value 'flexml:flexml-node)
-       (bind ((-children- (flexml:children-of ,value))
-              (-content- (when (and (length= 1 -children-)
-                                    (stringp (first-elt -children-)))
-                           (flexml:string-content-of ,value))))
-         (declare (ignorable -children- -content-))
-         (flet ((recurse (function)
-                  (map 'list function -children-)))
-           (declare (ignorable #'recurse))
-           (eswitch ((flexml:local-name-of ,value) :test #'string=)
-             ,@forms))))))
