@@ -53,6 +53,7 @@
                                             'simple-base-string))
 
 (def (function eio) string-trim-whitespace (text)
+  (check-type text string)
   (string-trim +whitespace-characters+ text))
 
 (def (function eio) whitespace? (character)

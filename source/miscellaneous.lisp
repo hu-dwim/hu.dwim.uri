@@ -9,6 +9,8 @@
 ;;;;;;
 ;;; Misc
 
+(def (constant e) +xml-namespace-uri+ "http://www.w3.org/XML/1998/namespace")
+
 (def (function e) enable-standard-hu.dwim-syntaxes ()
   "This function sets up the common readtable modifications we (http://dwim.hu) use in almost all of our projects. Some projects enable more, but this is available almost everywhere."
   (enable-sharp-boolean-syntax)
@@ -68,7 +70,7 @@
                  symbol-name)
         (string+ "#:" symbol-name))))
 
-;; TODO switch the default of :otherwise to :error by delegating it to find-symbol*
+;; TODO switch the default of :otherwise to :error
 (def (function e) find-fully-qualified-symbol (name &key (otherwise nil))
   "The inverse of FULLY-QUALIFIED-SYMBOL-NAME. Does not INTERN but it does instantiate package-less symbols."
   (check-type name string)
