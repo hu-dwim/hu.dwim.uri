@@ -31,14 +31,14 @@
                                                 xmlns:soap #.+xml-namespace-uri/soap+)
                                   <soap:Body ,body>>))})
 
-(def (function e) send-soap-request (host service-url body &key proxy)
+(def (function e) send-soap-request (host service-url body &key proxy (timeout 15))
   (check-type host string)
   (check-type service-url string)
   (bind ((request (emit-soap-request-to-string (make-soap-envelope body)))
          (url (format nil "http://~A/~A" host service-url)))
     (hu.dwim.logger:standard-logger.debug "Sending soap request to ~A" url)
     (bind ((response (multiple-value-list
-                      (with-deadline (15)
+                      (with-deadline (timeout)
                         ;; TODO add a timeout for the socket stuff without sb-ext:with-timeout
                         (drakma:http-request url
                                              :proxy proxy
