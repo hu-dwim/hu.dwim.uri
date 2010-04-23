@@ -356,16 +356,19 @@
            (eswitch ((local-name-of ,value) :test #'string=)
              ,@forms))))))
 
-(def (macro e) children-local-name-eswitch (value &body forms)
+(def (macro e) children-local-name-eswitch ((node &key (trim-whitespace #t)) &body forms)
   (with-unique-names (children)
-    (once-only (value)
+    (once-only (node)
       ;; NOTE: iter screws up the lexenv...
       `(loop
-         :for -child- :across (children-of ,value)
+         :for -child- :across (children-of ,node)
          :do (bind ((,children (children-of -child-))
                     (-content- (when (and (length= 1 ,children)
                                           (stringp (first-elt ,children)))
                                  (string-content-of -child-))))
                (declare (ignorable -content-))
+               ,(when trim-whitespace
+                  `(when -content-
+                     (setf -content- (string-trim-whitespace -content-))))
                (eswitch ((local-name-of -child-) :test #'string=)
                  ,@forms))))))
