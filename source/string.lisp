@@ -223,7 +223,7 @@
 			  1))))))
     (aref d (1- height) (1- width))))
 
-(def (function e) levenshstein-relative-distance (s1 s2)
+(def (function e) levenshtein-relative-distance (s1 s2)
   (bind ((max-distance (max (length s1) (length s2)))
          (distance (levenshtein-distance s1 s2)))
     (if (zerop max-distance)
