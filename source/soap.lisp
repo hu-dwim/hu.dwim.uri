@@ -9,6 +9,8 @@
 ;;;;;;
 ;;; SOAP
 
+(def (hu.dwim.logger:logger e) soap (hu.dwim.logger:standard-logger))
+
 (def special-variable *soap-stream*)
 
 (eval-always
@@ -36,7 +38,8 @@
   (check-type service-url string)
   (bind ((request (emit-soap-request-to-string (make-soap-envelope body)))
          (url (format nil "http://~A/~A" host service-url)))
-    (hu.dwim.logger:standard-logger.debug "Sending soap request to ~A" url)
+    (soap.debug "Sending soap request to ~A" url)
+    (soap.dribble "Sending soap request to ~A, request body is ~S" url request)
     (bind ((response (multiple-value-list
                       (with-deadline (timeout)
                         ;; TODO add a timeout for the socket stuff without sb-ext:with-timeout
@@ -45,9 +48,10 @@
                                              :method :post
                                              :content-type "application/soap+xml"
                                              :content request)))))
-      (hu.dwim.logger:standard-logger.debug "Received soap response from ~A: ~S" url response)
+      (soap.debug "Received soap response from ~A" url)
       (when (typep (first response) '(vector (unsigned-byte 8)))
         (setf (first response) (babel:octets-to-string (coerce (first response) '(vector (unsigned-byte 8))) :encoding :utf-8)))
+      (soap.dribble "Received soap response from ~A. Response is ~S" url response)
       (values-list response))))
 
 (def (function e) parse-soap-envelope/flexml (string)
@@ -56,7 +60,7 @@
                                                        :drop-whitespace #t)))
 
 (def (function e) soap-envelope-body/flexml (envelope)
-  (first-elt (hu.dwim.util.flexml:children-of (first-elt (hu.dwim.util.flexml:children-of envelope)))))
+  (the-only-element (hu.dwim.util.flexml:children-of envelope)))
 
 (def (function e) parse-soap-envelope/dom (string)
   (labels ((dummy-entity-resolver (public-id system-id)
