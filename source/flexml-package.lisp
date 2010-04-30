@@ -13,14 +13,9 @@
   (:readtable-setup
    (hu.dwim.def:setup-readtable/same-as-package :hu.dwim.util)))
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (unless (find-package "XML")
-    (make-package :hu.dwim.util.xml :nicknames '("XML")))
+(def package :hu.dwim.util.xml
   ;; for details see http://www.w3.org/XML/1998/namespace.html
-  (bind ((xml-names (mapcar #'symbol-name '(#:id
-                                            #:base
-                                            #:lang
-                                            #:space))))
-    (export (mapcar (rcurry #'intern (find-package "XML"))
-                    xml-names)
-            (find-package "XML"))))
+  (:export #:id
+           #:base
+           #:lang
+           #:space))

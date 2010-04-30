@@ -13,7 +13,7 @@
   (check-type xml-namespace-uri string)
   (setf (find-lisp-package-for-xml-namespace xml-namespace-uri) (find-package lisp-package)))
 
-(register-xml-namespace +xml-namespace-uri+ "XML")
+(register-xml-namespace +xml-namespace-uri+ :hu.dwim.util.xml)
 
 (def (class* ea) builder (sax:default-handler)
   ((default-package)
