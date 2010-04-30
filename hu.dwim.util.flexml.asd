@@ -11,7 +11,8 @@
 (defsystem :hu.dwim.util.flexml
   :class hu.dwim.system
   :description "A CXML document model that can parse into CLOS nodes"
-  :depends-on (:cxml
+  :depends-on (:cl-ppcre
+               :cxml
                :hu.dwim.def
                :hu.dwim.defclass-star+hu.dwim.def
                :hu.dwim.def.namespace
