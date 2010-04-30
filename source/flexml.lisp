@@ -76,7 +76,7 @@
     builder))
 
 (def (class* ea) node ()
-  ((xml:id nil)
+  ((hu.dwim.util.xml:id nil)
    (parent nil)
    (children nil)
    (attributes nil)
