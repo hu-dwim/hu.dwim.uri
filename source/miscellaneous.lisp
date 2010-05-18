@@ -22,7 +22,7 @@
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      ,@body))
 
-(def (function ioe) eval-interpret (form)
+(def (function ioe) eval/interpret (form)
   (bind #*((:sbcl ((sb-ext:*evaluator-mode* :interpret))))
     (eval form)))
 
