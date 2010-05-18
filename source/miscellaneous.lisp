@@ -233,6 +233,12 @@
        (progn
          ,@default-forms)))
 
+(def (macro e) econd (&whole whole &rest clauses)
+  (assert (notany (lambda (el) (find el clauses :key #'first)) '(t otherwise)) () "~S may not contain otherwise clause" whole)
+  `(cond
+     ,@clauses
+     (t (error "~S failed" ',whole))))
+
 (def (function e) quoted-form? (thing)
   (and (consp thing)
        (eq (car thing) 'quote)
