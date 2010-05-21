@@ -26,7 +26,7 @@
   (bind #*((:sbcl ((sb-ext:*evaluator-mode* :interpret))))
     (eval form)))
 
-(def (constant e) +no-error-status-code+ 0)
+(def (constant e) +process-return-code/no-error+ 0)
 
 (def (function e) quit (status-code)
   ;; (log.info "Quiting production image with status-code ~A" status-code)
