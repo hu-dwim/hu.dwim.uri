@@ -18,7 +18,7 @@
                 :components ((:file "anaphora" :depends-on ("package"))
                              #+sbcl(:file "compact-class" :depends-on ("mop" "miscellaneous"))
                              (:file "dynamic-context" :depends-on ("miscellaneous"))
-                             (:file "error-handling-early" :depends-on ("package"))
+                             (:file "error-handling-early" :depends-on ("package" "miscellaneous"))
                              (:file "generic-operator" :depends-on ("package"))
                              (:file "hash-table" :depends-on ("package"))
                              (:file "integer-to-string" :depends-on ("package"))
