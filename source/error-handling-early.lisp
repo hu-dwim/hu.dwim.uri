@@ -15,11 +15,13 @@
 
 (def (function e) print-error-safely (&optional message &rest args)
   (when message
-    (bind ((formatted (or (ignore-errors
-                            (apply #'format nil message args))
-                          (ignore-errors
-                            (format nil "Error while formatting error message.~%  Format control: ~A~%  Argument types: ~A" message (mapcar #'type-of args)))
-                          "Err, complete meltdown in BEST-EFFORT-LOG-ERROR. Sorry, no more clue is available...")))
+    (bind ((formatted (if args
+                          (or (ignore-errors
+                                (apply #'format nil message args))
+                              (ignore-errors
+                                (format nil "Error while formatting error message.~%  Format control: ~A~%  Argument types: ~A" message (mapcar #'type-of args)))
+                              "Err, complete meltdown in BEST-EFFORT-LOG-ERROR. Sorry, no more clue is available...")
+                          message)))
       (ignore-errors
         (write-string formatted *error-output*)
         (terpri *error-output*)
