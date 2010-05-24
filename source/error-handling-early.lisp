@@ -21,7 +21,9 @@
                             (format nil "Error while formatting error message.~%  Format control: ~A~%  Argument types: ~A" message (mapcar #'type-of args)))
                           "Err, complete meltdown in BEST-EFFORT-LOG-ERROR. Sorry, no more clue is available...")))
       (ignore-errors
-        (write-string formatted *error-output*)))))
+        (write-string formatted *error-output*)
+        (terpri *error-output*)
+        (finish-output *error-output*)))))
 
 (def (function e) maybe-invoke-debugger (condition &key context)
   (when (debug-on-error? context condition)
