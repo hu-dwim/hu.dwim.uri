@@ -21,7 +21,7 @@
                            (ignore-condition-callback (constantly #f))
                            (level-2-error-handler (if log-to-debug-io
                                                       (lambda (error &key message &allow-other-keys)
-                                                        (format *debug-io* "~A~%" (build-backtrace-string error :message message :timestamp (get-universal-time)))
+                                                        (format *debug-io* "~A~%" (build-backtrace-string error :message message))
                                                         (maybe-invoke-debugger error))
                                                       (lambda (error &key &allow-other-keys)
                                                         (maybe-invoke-debugger error))))
@@ -93,7 +93,7 @@
 
 (def function disabled-debugger-hook (condition &optional logger)
   (bind ((message (or (ignore-errors
-                        (build-backtrace-string condition :message "Unhandled error while debugger is disabled, quitting..." :timestamp (get-universal-time)))
+                        (build-backtrace-string condition :message "Unhandled error while debugger is disabled, quitting..."))
                       "Err, complete meltdown in DISABLED-DEBUGGER-HOOK. Sorry, no more clue is available...")))
     (when message
       (ignore-errors
@@ -153,7 +153,7 @@
   (awhen (find-package "BORDEAUX-THREADS")
     (funcall (find-symbol "THREAD-NAME" it) (funcall (find-symbol "CURRENT-THREAD" it)))))
 
-(def (function e) build-backtrace-string (error &key message timestamp)
+(def (function e) build-backtrace-string (error &key message (timestamp (get-universal-time)))
   "Message may also be a list, in which case FORMAT is applied on it."
   (with-backtrace-printer-bindings
     (block building
