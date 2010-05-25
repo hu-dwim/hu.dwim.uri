@@ -56,9 +56,9 @@
            (with-open-file (pid-stream pathname :direction :output
                                        :element-type 'character
                                        :if-exists :error)
-             (princ (isys:%sys-getpid) pid-stream))
+             (princ (isys:getpid) pid-stream))
            (setf pid-file-has-been-created? #t)
-           (format *debug-io* "PID file is ~S, PID is ~A~%" pathname (isys:%sys-getpid))
+           (format *debug-io* "PID file is ~S, PID is ~A~%" pathname (isys:getpid))
            (-with-macro/body-))
       (when pid-file-has-been-created?
         (unless (ignore-errors
