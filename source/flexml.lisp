@@ -8,10 +8,12 @@
 
 (def (namespace e :test 'equalp :weakness :value) lisp-package-for-xml-namespace)
 
-(def (function e) register-xml-namespace (xml-namespace-uri lisp-package)
-  (check-type lisp-package (or symbol string))
+(def (function e) register-xml-namespace (xml-namespace-uri lisp-package-designator)
+  (check-type lisp-package-designator (or symbol string))
   (check-type xml-namespace-uri string)
-  (setf (find-lisp-package-for-xml-namespace xml-namespace-uri) (find-package lisp-package)))
+  (bind ((lisp-package (find-package lisp-package-designator)))
+    (assert lisp-package () "~S: package ~S not found" 'register-xml-namespace lisp-package-designator)
+    (setf (find-lisp-package-for-xml-namespace xml-namespace-uri) lisp-package)))
 
 (register-xml-namespace +xml-namespace-uri+ :hu.dwim.util.xml)
 

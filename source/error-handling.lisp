@@ -94,7 +94,7 @@
 (def function disabled-debugger-hook (condition &optional logger)
   (bind ((message (or (ignore-errors
                         (build-backtrace-string condition :message "Unhandled error while debugger is disabled, quitting..."))
-                      "Err, complete meltdown in DISABLED-DEBUGGER-HOOK. Sorry, no more clue is available...")))
+                      "Err, complete meltdown in DISABLED-DEBUGGER-HOOK. Sorry, no more clues...")))
     (when message
       (ignore-errors
         (write-string message *error-output*)
