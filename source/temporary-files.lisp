@@ -14,12 +14,6 @@
 
 (def constant +temporary-directory-name-prefix+ "hu.dwim-")
 
-;; TODO not here, but where else? iolib is needed...
-(def (function e) posix-process-exists? (pid)
-  (ignore-errors
-    (isys:kill pid 0)
-    #t))
-
 (def (function e) directory-name-for-temporary-files (&key (pid (isys:getpid)))
   ;; NOTE: unexpressed abstraction: this file name structure is assumed in CLEANUP-TEMPORARY-DIRECTORIES
   (string+ (iolib.pathnames:file-path-namestring iolib.os:*temporary-directory*)

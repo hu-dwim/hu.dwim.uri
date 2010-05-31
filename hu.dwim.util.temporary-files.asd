@@ -11,7 +11,7 @@
 (defsystem :hu.dwim.util.temporary-files
   :class hu.dwim.system
   :description ""
-  :depends-on (:hu.dwim.util
+  :depends-on (:hu.dwim.util+iolib
                :iolib.pathnames
                :iolib.os)
   :components ((:module "source"

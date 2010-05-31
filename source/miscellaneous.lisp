@@ -133,6 +133,11 @@
   `(surround-body-when* ((not ,test) ,surround-with :body-name ,body-name)
      ,@body))
 
+(def (function eo :inline :possible) get-monotonic-time ()
+  "Returns such a time measure that constantly grows (it's a number in seconds, and it's unaffected by setting the system clock)."
+  ;; NOTE: the portable definition below does not satisfy the requirements. See the version in integration/iolib.lisp.
+  (/ (get-internal-real-time) internal-time-units-per-second))
+
 ;;;;;;
 ;;; Binding related
 
