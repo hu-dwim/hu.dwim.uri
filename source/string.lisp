@@ -172,7 +172,7 @@
 ;;;;;;
 ;;; Random string
 
-(def (function eoi) random-string (&optional length (alphabet +ascii-alphabet+) prefix)
+(def (function eo :inline :possible) random-string (&optional length (alphabet +ascii-alphabet+) prefix)
   (unless length
     (setf length 32))
   (unless alphabet
@@ -198,8 +198,6 @@
         :for i :from (if prefix (length prefix) 0) :below length
         :do (setf (aref result i) (aref alphabet (random alphabet-length)))
         :finally (return result)))))
-
-(declaim (notinline random-string)) ; make it/them inlinable, but not inlined by default
 
 ;;;;;;
 ;;; Levenshtein distance

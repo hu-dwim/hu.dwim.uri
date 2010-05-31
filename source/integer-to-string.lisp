@@ -50,7 +50,7 @@
           (replace real-result result :end1 result-index)
           real-result))))
 
-(def (function eio) integer-to-string (integer &key minimum-column-count (maximum-digit-count most-positive-fixnum) (divisor 10))
+(def (function eo :inline :possible) integer-to-string (integer &key minimum-column-count (maximum-digit-count most-positive-fixnum) (divisor 10))
   (check-type integer integer)
   (check-type minimum-column-count (or null fixnum))
   (check-type maximum-digit-count fixnum)
@@ -63,5 +63,3 @@
                                  :minimum-column-count minimum-column-count
                                  :maximum-digit-count maximum-digit-count
                                  :divisor divisor))))
-
-(declaim (notinline integer-to-string)) ; make it inlinable, but don't make it inline by default
