@@ -6,8 +6,7 @@
 
 (in-package :hu.dwim.util)
 
-(locally
-    (declare #*((:sbcl (sb-ext:muffle-conditions sb-kernel:redefinition-warning))))
+(with-muffled-redefinition-warnings
   (def (function o :inline :possible) get-monotonic-time ()
     "Returns such a time measure that constantly grows (it's a number in seconds, and it's unaffected by setting the system clock)."
     (isys:get-monotonic-time)))

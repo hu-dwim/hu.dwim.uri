@@ -138,6 +138,13 @@
   ;; NOTE: the portable definition below does not satisfy the requirements. See the version in integration/iolib.lisp.
   (/ (get-internal-real-time) internal-time-units-per-second))
 
+(def (macro e) with-muffled-redefinition-warnings (&body body)
+  `(locally
+       (declare #*((:sbcl (sb-ext:muffle-conditions sb-kernel:redefinition-warning))))
+     (handler-bind
+         (#*((:sbcl (sb-kernel:redefinition-warning #'muffle-warning))))
+       ,@body)))
+
 ;;;;;;
 ;;; Binding related
 
