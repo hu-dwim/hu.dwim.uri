@@ -273,3 +273,28 @@
   (if (fboundp name)
       (fdefinition name)
       (handle-otherwise (error "The function ~A is undefined" name))))
+
+(def (macro e) with-dynamic-memoize ((name &rest keys) &body forms)
+  (bind ((cache (format-symbol *package* "*~A*" name))
+         (not-cached (gensym)))
+    (with-unique-names (body key result)
+      `(locally (declare (special ,cache))
+         (flet ((,body ()
+                  ,(if keys
+                       `(bind ((,key (list ,@keys))
+                               (,result (gethash ,key ,cache ',not-cached)))
+                          (if (eq ,result ',not-cached)
+                              (bind ((,result (progn ,@forms)))
+;                                (format t "MIS ~A~%" ,key)
+                                (setf (gethash ,key ,cache) ,result)
+                                ,result)
+                              (progn
+;                                (format t "HIT ~A~%" ,key)
+                                ,result)))
+                       `(progn
+                          ,@forms))))
+           (if (boundp ',cache)
+               (,body)
+               (bind ((,cache (make-hash-table :test #'equal)))
+                 (declare (special ,cache))
+                 (,body))))))))
