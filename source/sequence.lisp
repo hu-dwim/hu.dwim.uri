@@ -10,12 +10,24 @@
 ;;; Sequence utilities
 
 (def (function ioe) the-only-element (elements)
-  (debug-only (assert (length= 1 elements)))
+  (assert (length= 1 elements))
   (elt elements 0))
 
+(def compiler-macro the-only-element (&whole whole elements)
+  (once-only (elements)
+    `(progn
+       (assert (length= 1 ,elements) () "~S failed on form ~S" 'the-only-element ',whole)
+       (elt ,elements 0))))
+
 (def (function ioe) the-non-nil (value)
-  (debug-only (assert value))
+  (assert value)
   value)
+
+(def compiler-macro the-non-nil (&whole whole value)
+  (once-only (value)
+    `(progn
+       (assert ,value () "~S failed on form ~S" 'the-non-nil ',whole)
+       ,value)))
 
 (def (function e) ensure-sequence (thing)
   (if (typep thing 'sequence)
