@@ -88,5 +88,11 @@
     (until file)
     (finally (return (values file file-name)))))
 
+(def (with-macro* e :macro-only-arguments variable-name) with-temporary-file (variable-name &rest args)
+  (bind ((stream (apply 'open-temporary-file args)))
+    (unwind-protect
+         (-with-macro/body- (stream variable-name))
+      (delete-file stream))))
+
 (def (function e) substitute-illegal-characters-in-file-name (name &key (replacement #\_))
   (substitute-all "/?*\"" replacement name))
