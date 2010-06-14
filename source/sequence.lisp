@@ -35,7 +35,7 @@
       (list thing)))
 
 (def (function e) all-the-same? (sequence &key (test 'eql) key)
-  "Returns t if all elements in the LIST are eq."
+  "Returns true if all elements in the LIST are equal using TEST."
   (check-type sequence sequence)
   (ensure-functionf test)
   (iter (with first-element)
