@@ -107,3 +107,39 @@
     (iter (for old-element :in-sequence old-elements)
           (nsubstitute new-element old-element sequence :test test :key key :start start :count count :end end :from-end from-end))
     sequence))
+
+;;;;;;
+;;; tree
+
+(def (function e) find/tree (item sequence &key (key 'identity) (test 'eql))
+  (ensure-functionf key test)
+  (block searching
+    (labels
+        ((recurse (sequence)
+           (loop
+             :for el :in sequence :do
+             (cond
+               ((funcall test item (funcall key el))
+                (return-from searching el))
+               ((consp el)
+                (recurse el))))))
+      (recurse sequence)
+      nil)))
+
+(def (function e) substitute/tree (new old list &key from-end (test #'eql) (test-not nil) (end nil) (count nil) (key nil) (start 0))
+  "Starting from LIST non-destructively replaces OLD with NEW."
+  (if (consp list)
+      (bind ((result (iter (for newitem in (ensure-list new))
+                           (for olditem in (ensure-list old))
+                           (setf list (substitute newitem olditem list :from-end from-end :test test :test-not test-not
+                                                  :end end :count count :key key :start start))
+                           (finally (return list)))))
+        (iter (for node first result then (cdr node))
+              (until (null node))
+              (for el = (car node))
+              (setf (car node) (substitute/tree new old el :from-end from-end :test test :test-not test-not
+                                                :end end :count count :key key :start start)))
+        result)
+      (if (funcall test list old)
+          new
+          list)))
