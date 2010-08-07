@@ -46,15 +46,21 @@
                (setf level-1-error error)
                (handler-bind ((serious-condition #'handle-level-2-error))
                  (with-thread-activity-description ("HANDLE-LEVEL-1-ERROR")
-                   (cond
-                     ((typep error 'storage-condition)
-                      ;; on SBCL it includes control stack exhaustion, too
-                      (apply out-of-storage-callback error args))
-                     ((ignore-error? error)
-                      nil)
-                     (t
-                      (funcall level-1-error-handler error)))
-                   (abort-unit-of-work "Level 1 error handler finished normally")
+                   (bind ((reason nil))
+                     (cond
+                       ((typep error 'storage-condition)
+                        ;; on SBCL it includes control stack exhaustion, too
+                        (prog1
+                            (apply out-of-storage-callback error args)
+                          (setf reason "Error is a STORAGE-CONDITION")))
+                       ((ignore-error? error)
+                        (setf reason "Error is to be ignored according to IGNORE-CONDITION-CALLBACK")
+                        nil)
+                       (t
+                        (prog1
+                            (funcall level-1-error-handler error)
+                          (setf reason "Level 1 error handler finished normally"))))
+                     (abort-unit-of-work reason))
                    (error "This code path must not be reached in the level 1 error handler of WITH-LAYERED-ERROR-HANDLERS"))))
              (handle-level-2-error (error)
                ;; second level of error handling quarding against errors while handling the original error
