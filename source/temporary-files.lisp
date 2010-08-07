@@ -56,14 +56,17 @@
                                :test #'temporary-directory-of-dead-process?))
     deleted))
 
-(def (function e) filename-for-temporary-file (&optional name-prefix)
-  (string+ (directory-for-temporary-files)
-           name-prefix
-           (when name-prefix
-             "-")
-           (integer-to-string (atomic-counter/increment *temporary-file-unique-counter*))
-           "-"
-           (integer-to-string (random 100000 *temporary-file-random-state*))))
+(def (function e) filename-for-temporary-file (&optional prefix extension)
+  (apply #'string+
+         (directory-for-temporary-files)
+         prefix
+         (when prefix
+           "-")
+         (integer-to-string (atomic-counter/increment *temporary-file-unique-counter*))
+         "-"
+         (integer-to-string (random 100000 *temporary-file-random-state*))
+         (when extension
+           (list "." extension))))
 
 (def (function e) shadow-temporary-filename (root-directory relative-path temp-subdirectory-name)
   "Returns a filename 'relocated' to the temp directory under TEMP-SUBDIRECTORY-NAME."
@@ -73,12 +76,13 @@
                                                 :defaults root-directory)))
 
 (def (function e) open-temporary-file (&rest args &key
-                                             (element-type '(unsigned-byte 8))
+                                             (element-type :default) ; this might be SBCL specific, but we want bivalent by default
                                              (direction :output)
-                                             name-prefix)
-  (remove-from-plistf args :name-prefix)
+                                             file-name-prefix
+                                             file-type)
+  (remove-from-plistf args :file-name-prefix :file-type)
   (iter
-    (for file-name = (filename-for-temporary-file name-prefix))
+    (for file-name = (filename-for-temporary-file file-name-prefix file-type))
     (for file = (apply #'open
                        file-name
                        :if-exists nil
