@@ -53,6 +53,7 @@
                    (progn
                      (format *debug-io* "Deleting stale PID file ~S pointing to non-existent PID ~S~%" pathname pid)
                      (delete-file pathname)))))
+           (ensure-directories-exist pathname)
            (with-open-file (pid-stream pathname :direction :output
                                        :element-type 'character
                                        :if-exists :error)
