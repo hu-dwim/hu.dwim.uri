@@ -137,7 +137,7 @@
                  :local-variables local-variables
                  :source-location source-location))
 
-(def with-macro with-backtrace-printer-bindings ()
+(def (with-macro e) with-backtrace-printer-bindings ()
   (bind ((bindings `((*print-pretty*           . #t)
                      (*print-level*            . 3)
                      (*print-length*           . 100)
