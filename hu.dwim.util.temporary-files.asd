@@ -13,6 +13,7 @@
   :description ""
   :depends-on (:hu.dwim.util+iolib
                :iolib.pathnames
-               :iolib.os)
+               :iolib.os
+               :iolib.syscalls)
   :components ((:module "source"
                 :components ((:file "temporary-files")))))
