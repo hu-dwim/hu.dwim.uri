@@ -24,8 +24,9 @@
 
 (def (function e) directory-for-temporary-files ()
   (or *directory-for-temporary-files*
-      (setf *directory-for-temporary-files*
-            (ensure-directories-exist (directory-name-for-temporary-files)))))
+      (bind ((dir (directory-name-for-temporary-files)))
+        (ensure-directories-exist dir) ; TODO use something from iolib.os ?
+        (setf *directory-for-temporary-files* (iolib.pathnames:file-path (string+ dir "/."))))))
 
 (def (function e) delete-directory-for-temporary-files ()
   (when *directory-for-temporary-files*
@@ -58,7 +59,7 @@
 
 (def (function e) filename-for-temporary-file (&optional prefix extension)
   (apply #'string+
-         (directory-for-temporary-files)
+         (iolib.pathnames:file-path-namestring (directory-for-temporary-files))
          prefix
          (when prefix
            "-")
@@ -68,12 +69,20 @@
          (when extension
            (list "." extension))))
 
-(def (function e) shadow-temporary-filename (root-directory relative-path temp-subdirectory-name)
+(def (function e) shadow-temporary-file-path (root-directory relative-path temp-subdirectory-name)
   "Returns a filename 'relocated' to the temp directory under TEMP-SUBDIRECTORY-NAME."
-  (merge-pathnames relative-path (make-pathname :directory (append (pathname-directory (directory-for-temporary-files))
-                                                                   (list temp-subdirectory-name)
-                                                                   (rest (pathname-directory root-directory)))
-                                                :defaults root-directory)))
+  (check-type root-directory (or pathname iolib.pathnames:file-path-designator))
+  (check-type relative-path string)
+  (assert (not (starts-with #\/ relative-path)))
+  (bind ((root-directory (iolib.pathnames:file-path root-directory)))
+    (iolib.pathnames:merge-file-paths relative-path
+                                      (iolib.pathnames:make-file-path :components (append (iolib.pathnames:file-path-directory (directory-for-temporary-files))
+                                                                                          (list temp-subdirectory-name)
+                                                                                          (rest (iolib.pathnames:file-path-directory root-directory)))
+                                                                      :defaults root-directory))))
+
+(def (function e) shadow-temporary-filename (root-directory relative-path temp-subdirectory-name)
+  (iolib.pathnames:file-path-namestring (shadow-temporary-file-path root-directory relative-path temp-subdirectory-name)))
 
 (def (function e) open-temporary-file (&rest args &key
                                              (element-type :default) ; this might be SBCL specific, but we want bivalent by default
