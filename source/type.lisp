@@ -38,7 +38,10 @@ if we strictly followed CLHS, then it should be the following:
 ;; (def (namespace :test 'equal :finder-name %find-class-for-type) class-for-type)
 (def special-variable *class-for-types* (make-hash-table :test #'equal #+sbcl :synchronized #+sbcl #t)) ;; TODO THL #+allegro?
 
-;; TODO: type expand
+(def (function e) expand-type (type)
+  #*((:sbcl (sb-ext:typexpand type))
+     (t #.(not-yet-implemented/crucial-api 'expand-type))))
+
 ;; TODO add error on failure or &key otherwise
 (def (function e) find-class-for-type (type)
   (or (gethash type *class-for-types*)
@@ -96,12 +99,11 @@ if we strictly followed CLHS, then it should be the following:
                        (awhen (type-instance-count-upper-bound element)
                          (minimizing it)))))))))
     (or (body input-type)
-        #+sbcl (body (sb-ext:typexpand input-type)))))
+        (body (expand-type input-type)))))
 
 ;; TODO: sort the result with some natural sort
 (def (function e) type-instance-list (type)
-  #+sbcl
-  (setf type (sb-ext:typexpand type))
+  (setf type (expand-type type))
   (etypecase type
     (symbol
      (case type
