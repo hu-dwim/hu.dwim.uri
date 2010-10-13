@@ -165,10 +165,10 @@
   "Message may also be a list, in which case FORMAT is applied on it."
   (with-backtrace-printer-bindings
     (block building
-      (with-layered-error-handlers ((lambda (nested-error)
+      (with-layered-error-handlers ((lambda (nested-error &key &allow-other-keys)
                                       (return-from building (format nil "Failed to build backtrace due to: ~A. The orignal error was: ~A" nested-error error)))
-                                    (lambda (reason args)
-                                      (declare (ignore reason args))
+                                    (lambda (reason &key &allow-other-keys)
+                                      (declare (ignore reason))
                                       (error "This should be impossible to reach in ~S" 'build-backtrace-string))
                                     :level-2-error-handler (lambda (nested-error2)
                                                              (declare (ignore nested-error2))
