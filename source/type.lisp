@@ -38,8 +38,14 @@ if we strictly followed CLHS, then it should be the following:
 ;; (def (namespace :test 'equal :finder-name %find-class-for-type) class-for-type)
 (def special-variable *class-for-types* (make-hash-table :test #'equal #+sbcl :synchronized #+sbcl #t)) ;; TODO THL #+allegro?
 
-(def (function e) expand-type (type)
-  #*((:sbcl (sb-ext:typexpand type))
+(def (function e) expand-type (type &optional env)
+  (declare (ignorable type env))
+  #*((:sbcl (sb-ext:typexpand type env))
+     (t #.(not-yet-implemented/crucial-api 'expand-type))))
+
+(def (function e) expand-type-1 (type &optional env)
+  (declare (ignorable type env))
+  #*((:sbcl (sb-ext:typexpand-1 type env))
      (t #.(not-yet-implemented/crucial-api 'expand-type))))
 
 ;; TODO add error on failure or &key otherwise
