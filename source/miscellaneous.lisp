@@ -98,7 +98,7 @@
         (-body-))))
 
 (def (function e) if-symbol-exists (package name)
-  "Can be used like this: #+#.(hu.dwim.util:if-symbol-exists \"SB-C\" \"SAVE-FP-AND-PC-AROUND-ALIEN-CALL\") to only read the next form when the given symbol exists in the given package."
+  "Can be used to conditionalize at read-time like this: #+#.(hu.dwim.asdf::if-symbol-exists \"PKG\" \"FOO\")(pkg::foo ...)"
   (if (and (find-package (string package))
            (find-symbol (string name) (string package)))
       '(:and)

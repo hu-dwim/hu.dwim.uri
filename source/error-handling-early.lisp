@@ -49,7 +49,7 @@
 ;;;;;;
 ;;; Error log decorators
 
-(def (special-variable :documentation "List of decorators that will be invoked when an error backtrace is logged. A decorator is a function thunk that will be funcall'd and can print to *STANDARD-OUTPUT* (caret will not be on a new line when called).")
+(def (special-variable :documentation "List of decorators that will be invoked when an error backtrace is logged. A decorator is a closure that will be FUNCALL'd and can print to *STANDARD-OUTPUT* (caret will not be on a new line when called).")
     *error-log-decorators* ())
 
 (def (definer e :available-flags "eiod") error-log-decorator (name &body body)
