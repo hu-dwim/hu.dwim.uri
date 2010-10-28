@@ -29,6 +29,7 @@
                                       "<error printing value>")))
               (format stream "~%---- ~S: ~A" var printed-value))))))))
 
+#+#.(hu.dwim.util:if-symbol-exists "SB-DEBUG" "*VERBOSITY*")
 (def function collect-backtrace/impl (&key (start 0) count
                                            ((:verbosity sb-debug::*verbosity*) sb-debug::*verbosity*)
                                            (print-frame-source (> sb-debug::*verbosity* 1))
@@ -58,6 +59,7 @@
      :start start :count count)
     (nreverse backtrace)))
 
+#+#.(hu.dwim.util:if-symbol-exists "SB-DEBUG" "*VERBOSITY*")
 (def function collect-call-path/impl (&key (start 0) count
                                            ((:verbosity sb-debug::*verbosity*) sb-debug::*verbosity*)
                                            &allow-other-keys)
