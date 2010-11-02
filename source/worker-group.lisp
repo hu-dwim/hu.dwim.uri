@@ -40,7 +40,7 @@
 
 (def function worker-loop/run-one-job (worker-group worker job)
   (with-layered-error-handlers ((lambda (error)
-                                  (worker-group.error (build-backtrace-string error :message (format nil "Error reached toplevel in worker ~A while executing job ~A" worker job)))
+                                  (worker-group.error (build-error-log-message :error-condition error :message (format nil "Error reached toplevel in worker ~A while executing job ~A" worker job)))
                                   (maybe-invoke-debugger error :context worker-group))
                                 (lambda (&rest args)
                                   (declare (ignore args))

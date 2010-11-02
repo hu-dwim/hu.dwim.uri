@@ -21,7 +21,8 @@
                            (ignore-condition-callback (constantly #f))
                            (level-2-error-handler (if log-to-debug-io
                                                       (lambda (error &key message &allow-other-keys)
-                                                        (format *debug-io* "~A~%" (build-backtrace-string error :message message))
+                                                        (format *debug-io* "~A~%" (build-error-log-message :error-condition error
+                                                                                                           :message message))
                                                         (maybe-invoke-debugger error))
                                                       (lambda (error &key &allow-other-keys)
                                                         (maybe-invoke-debugger error))))
@@ -99,7 +100,8 @@
 
 (def function disabled-debugger-hook (condition &optional logger)
   (bind ((message (or (ignore-errors
-                        (build-backtrace-string condition :message "Unhandled error while debugger is disabled, quitting..."))
+                        (build-error-log-message :error-condition condition
+                                                 :message "Unhandled error while debugger is disabled, quitting..."))
                       "Err, complete meltdown in DISABLED-DEBUGGER-HOOK. Sorry, no more clues...")))
     (when message
       (ignore-errors
@@ -161,15 +163,15 @@
   (awhen (find-package "BORDEAUX-THREADS")
     (funcall (find-symbol "THREAD-NAME" it) (funcall (find-symbol "CURRENT-THREAD" it)))))
 
-(def (function e) build-backtrace-string (error &key message (timestamp (get-universal-time)))
+(def (function e) build-error-log-message (&key error-condition message (timestamp (get-universal-time)) (include-backtrace #t))
   "Message may also be a list, in which case FORMAT is applied on it."
   (with-backtrace-printer-bindings
     (block building
-      (with-layered-error-handlers ((lambda (nested-error &key &allow-other-keys)
-                                      (return-from building (format nil "Failed to build backtrace due to: ~A. The orignal error was: ~A" nested-error error)))
-                                    (lambda (reason &key &allow-other-keys)
-                                      (declare (ignore reason))
-                                      (error "This should be impossible to reach in ~S" 'build-backtrace-string))
+      (with-layered-error-handlers ((lambda (nested-error)
+                                      (return-from building (format nil "Failed to build backtrace due to: ~A. The orignal error was: ~A" nested-error error-condition)))
+                                    (lambda (reason args)
+                                      (declare (ignore reason args))
+                                      (error "This should be impossible to reach in ~S" 'build-error-log-message))
                                     :level-2-error-handler (lambda (nested-error2)
                                                              (declare (ignore nested-error2))
                                                              (return-from building "Failed to build backtrace due to multiple nested errors. Giving up...")))
@@ -181,13 +183,16 @@
             (apply #'format t (ensure-list message)))
           (awhen (current-thread-name-if-available)
             (format t "~&*** In thread: ~A" it))
-          (format t "~&*** Error of type ~S:~%~A~&*** Backtrace:~%" (type-of error) error)
-          (bind ((backtrace (collect-backtrace))
-                 (*print-pretty* #f))
-            (iter (for stack-frame :in backtrace)
-                  (for index :upfrom 0)
-                  (write-string stack-frame)
-                  (terpri)))
+          (when error-condition
+            (format t "~&*** Error of type ~S:~%~A" (type-of error-condition) error-condition))
+          (when include-backtrace
+            (format t "~&*** Backtrace:~%")
+            (bind ((backtrace (collect-backtrace))
+                   (*print-pretty* #f))
+              (iter (for stack-frame :in backtrace)
+                    (for index :upfrom 0)
+                    (write-string stack-frame)
+                    (terpri))))
           (when *error-log-decorators*
             (format t "~&*** Backtrace decorators:")
             (dolist (decorator *error-log-decorators*)
