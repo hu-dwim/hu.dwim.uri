@@ -9,7 +9,7 @@
 ;;;;;;
 ;;; SOAP
 
-(def (hu.dwim.logger:logger e) soap (hu.dwim.logger:standard-logger))
+(def (hu.dwim.logger:logger e) soap ())
 
 (def special-variable *soap-stream*)
 
