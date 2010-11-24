@@ -280,3 +280,24 @@
                (bind ((,cache (make-hash-table :test #'equal)))
                  (declare (special ,cache))
                  (,body))))))))
+
+;;;;;;
+;;; Dealing with implementation differences
+
+;; (setf (logbitp ...) ...) is defined on some platforms and not on others, so introduce a new place
+(def (macro e) bit-value (index integer)
+  "Returns the INDEX'th bit of INTEGER as a boolean."
+ `(logbitp ,index ,integer))
+
+(define-setf-expander bit-value (index integer &environment env)
+  (bind (((:values temps vals stores store-form access-form) (get-setf-expansion integer env))
+         (stemp (first stores)))
+    (with-unique-names (ind store)
+      (values `(,ind ,@temps)
+              `(,index ,@vals)
+              (list store)
+              ;; TODO accepting generlized booleans here is a potential source of bugs: e.g. (setf (bit-value x y) 0) will set it to 1
+              `(let ((,stemp (dpb (if ,store 1 0) (byte 1 ,ind) ,access-form)))
+                 ,store-form
+                 ,store)
+              `(logbitp ,ind ,access-form)))))
