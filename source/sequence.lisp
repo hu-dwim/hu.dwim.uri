@@ -143,3 +143,20 @@
       (if (funcall test list old)
           new
           list)))
+
+#+()
+(def (function io) shrink-vector (vector size)
+  "Fast shrinking for simple vectors. It's not thread-safe, use only on local vectors!"
+  #+allegro
+  (excl::.primcall 'sys::shrink-svector vector size)
+  #+sbcl
+  (setq vector (sb-kernel:%shrink-vector vector size))
+  #+cmu
+  (lisp::shrink-vector vector size)
+  #+lispworks
+  (system::shrink-vector$vector vector size)
+  #+scl
+  (common-lisp::shrink-vector vector size)
+  #-(or allegro cmu lispworks sbcl scl)
+  (setq vector (subseq vector 0 size))
+  vector)
