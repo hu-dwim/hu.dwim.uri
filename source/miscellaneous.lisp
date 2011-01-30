@@ -233,6 +233,9 @@
        (progn
          ,@default-forms)))
 
+(def (function e) mandatory-argument ()
+  (error "A mandatory argument was not specified"))
+
 (def (macro e) econd (&whole whole &rest clauses)
   (assert (notany (lambda (el) (find el clauses :key #'first)) '(t otherwise)) () "~S may not contain otherwise clause" whole)
   `(cond
