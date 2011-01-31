@@ -57,7 +57,7 @@
                                :test #'temporary-directory-of-dead-process?))
     deleted))
 
-(def (function e) filename-for-temporary-file (&optional prefix extension)
+(def (function e) temporary-file-name (&optional prefix extension)
   (apply #'string+
          (iolib.pathnames:file-path-namestring (directory-for-temporary-files))
          prefix
@@ -68,6 +68,9 @@
          (integer-to-string (random 100000 *temporary-file-random-state*))
          (when extension
            (list "." extension))))
+
+(def (function e) temporary-file-path (&optional prefix extension)
+  (iolib.pathnames:file-path (temporary-file-name prefix extension)))
 
 (def (function e) shadow-temporary-file-path (root-directory relative-path temp-subdirectory-name)
   "Returns a filename 'relocated' to the temp directory under TEMP-SUBDIRECTORY-NAME."
@@ -91,7 +94,7 @@
                                              file-type)
   (remove-from-plistf args :file-name-prefix :file-type)
   (iter
-    (for file-name = (filename-for-temporary-file file-name-prefix file-type))
+    (for file-name = (temporary-file-name file-name-prefix file-type))
     (for file = (apply #'open
                        file-name
                        :if-exists nil
