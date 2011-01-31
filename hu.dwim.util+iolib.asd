@@ -12,6 +12,7 @@
   :class hu.dwim.system
   :description "Integration of hu.dwim.util with iolib."
   :depends-on (:hu.dwim.util
+               :iolib.pathnames
                :iolib.syscalls)
   :components ((:module "integration"
                 :components ((:file "iolib")))))
