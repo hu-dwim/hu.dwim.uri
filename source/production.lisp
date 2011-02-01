@@ -45,22 +45,22 @@
   (bind ((pid-file-has-been-created? #f))
     (unwind-protect
          (progn
-           (format *debug-io* "Writing pid file ~S~%" pathname)
            (when (cl-fad:file-exists-p pathname)
-             (bind ((pid (parse-integer (read-file-into-string pathname))))
-               (if (posix-process-exists? pid)
-                   (error "PID file ~S already exists and points to a running process ~S" pathname pid)
+             (bind ((other-pid (parse-integer (read-file-into-string pathname))))
+               (if (posix-process-exists? other-pid)
+                   (error "PID file ~S already exists and points to a running process ~S" pathname other-pid)
                    (progn
-                     (format *debug-io* "Deleting stale PID file ~S pointing to non-existent PID ~S~%" pathname pid)
+                     (format *debug-io* "Deleting stale PID file ~S pointing to non-existent PID ~S~%" pathname other-pid)
                      (delete-file pathname)))))
-           (ensure-directories-exist pathname)
-           (with-open-file (pid-stream pathname :direction :output
-                                       :element-type 'character
-                                       :if-exists :error)
-             (princ (isys:getpid) pid-stream))
-           (setf pid-file-has-been-created? #t)
-           (format *debug-io* "PID file is ~S, PID is ~A~%" pathname (isys:getpid))
-           (-with-macro/body-))
+           (bind ((pid (isys:getpid)))
+             (format *debug-io* "Writing PID file ~S, PID is ~S~%" pathname pid)
+             (ensure-directories-exist pathname)
+             (with-open-file (pid-stream pathname :direction :output
+                                         :element-type 'character
+                                         :if-exists :error)
+               (princ pid pid-stream))
+             (setf pid-file-has-been-created? #t)
+             (-with-macro/body-)))
       (when pid-file-has-been-created?
         (unless (ignore-errors
                   (delete-file pathname)
