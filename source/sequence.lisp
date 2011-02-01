@@ -34,6 +34,15 @@
       thing
       (list thing)))
 
+(def (function e) subseq-if-longer (limit sequence &key postfix)
+  (if (> (length sequence) limit)
+      (bind ((cut (subseq sequence 0 limit)))
+        (values (if postfix
+                    (concatenate 'string cut postfix)
+                    cut)
+                #t))
+      (values sequence #f)))
+
 (def (function e) all-the-same? (sequence &key (test 'eql) key)
   "Returns true if all elements in the LIST are equal using TEST."
   (check-type sequence sequence)
