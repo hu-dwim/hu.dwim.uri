@@ -153,19 +153,11 @@
           new
           list)))
 
-#+()
-(def (function io) shrink-vector (vector size)
+(def (function eio) shrink-vector (vector size)
   "Fast shrinking for simple vectors. It's not thread-safe, use only on local vectors!"
-  #+allegro
-  (excl::.primcall 'sys::shrink-svector vector size)
-  #+sbcl
-  (setq vector (sb-kernel:%shrink-vector vector size))
-  #+cmu
-  (lisp::shrink-vector vector size)
-  #+lispworks
-  (system::shrink-vector$vector vector size)
-  #+scl
-  (common-lisp::shrink-vector vector size)
-  #-(or allegro cmu lispworks sbcl scl)
-  (setq vector (subseq vector 0 size))
-  vector)
+  #*((:sbcl      (sb-kernel:%shrink-vector vector size))
+     (:allegro   (excl::.primcall 'sys::shrink-svector vector size))
+     (:cmu       (lisp::shrink-vector vector size))
+     (:lispworks (system::shrink-vector$vector vector size))
+     (:scl       (common-lisp::shrink-vector vector size))
+     (t          (subseq vector 0 size))))
