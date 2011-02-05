@@ -26,7 +26,7 @@
   (or *directory-for-temporary-files*
       (bind ((dir (directory-name-for-temporary-files)))
         (ensure-directories-exist dir) ; TODO use something from iolib.os ?
-        (setf *directory-for-temporary-files* (iolib.pathnames:file-path (string+ dir "/."))))))
+        (setf *directory-for-temporary-files* (iolib.pathnames:file-path dir)))))
 
 (def (function e) delete-directory-for-temporary-files ()
   (when *directory-for-temporary-files*
@@ -60,6 +60,7 @@
 (def (function e) temporary-file-name (&optional prefix extension)
   (apply #'string+
          (iolib.pathnames:file-path-namestring (directory-for-temporary-files))
+         "/"
          prefix
          (when prefix
            "-")
