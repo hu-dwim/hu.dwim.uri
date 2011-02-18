@@ -36,12 +36,19 @@
                                                           (format *debug-io* "WITH-LAYERED-ERROR-HANDLERS is bailing out due to a STORAGE-CONDITION of type ~S~%" (type-of error)))
                                                         (constantly nil)))
                            &allow-other-keys)
+  "Below you can find the lambda lists of the input functions. &REST means the extra arguments of WITH-LAYERED-ERROR-HANDLERS that it didn't understand. It's advised to add &key &allow-other-keys for future compatibility wherever applicable.
+ - LEVEL-1-ERROR-HANDLER: (original-condition &rest)
+ - LEVEL-2-ERROR-HANDLER: (nested-condition &key message &rest)
+ - ABORT-UNIT-OF-WORK-CALLBACK: (&key reason &rest)
+ - GIVING-UP-CALLBACK: (&key reason &rest)
+ - IGNORE-CONDITION-CALLBACK: (condition &rest)
+ - OUT-OF-STORAGE-CALLBACK: (oos-condition &rest)"
   (remove-from-plistf args :log-to-debug-io :ignore-condition-callback :level-2-error-handler :giving-up-callback :out-of-storage-callback)
   (bind ((level-1-error nil))
     (labels ((ignore-error? (error)
                (apply ignore-condition-callback error args))
              (abort-unit-of-work (reason)
-               (apply abort-unit-of-work-callback reason args))
+               (apply abort-unit-of-work-callback :reason reason args))
              (handle-level-1-error (error)
                ;; first level of error handling, call around participants, give them a chance to render an error page, etc
                (setf level-1-error error)
@@ -59,7 +66,7 @@
                         nil)
                        (t
                         (prog1
-                            (funcall level-1-error-handler error)
+                            (apply level-1-error-handler error args)
                           (setf reason "Level 1 error handler finished normally"))))
                      (abort-unit-of-work reason))
                    (error "This code path must not be reached in the level 1 error handler of WITH-LAYERED-ERROR-HANDLERS"))))
@@ -69,7 +76,9 @@
                  (with-thread-activity-description ("HANDLE-LEVEL-2-ERROR")
                    (unless (ignore-error? error)
                      ;; reason: when e.g. an error html page is being sent the client socket may get reset
-                     (funcall level-2-error-handler error :message (list "Nested error while handling original error: ~A; the nested error is: ~A" level-1-error error)))
+                     (apply level-2-error-handler error
+                            :message (list "Nested error while handling original error: ~A; the nested error is: ~A" level-1-error error)
+                            args))
                    (abort-unit-of-work error)
                    (error "This code path must not be reached in the level 2 error handler of WITH-LAYERED-ERROR-HANDLERS"))))
              (handle-level-3-error (error)
@@ -169,10 +178,9 @@
     (block building
       (with-layered-error-handlers ((lambda (nested-error)
                                       (return-from building (format nil "Failed to build backtrace due to: ~A. The orignal error was: ~A" nested-error error-condition)))
-                                    (lambda (reason args)
-                                      (declare (ignore reason args))
+                                    (lambda (&key &allow-other-keys)
                                       (error "This should be impossible to reach in ~S" 'build-error-log-message))
-                                    :level-2-error-handler (lambda (nested-error2)
+                                    :level-2-error-handler (lambda (nested-error2 &key &allow-other-keys)
                                                              (declare (ignore nested-error2))
                                                              (return-from building "Failed to build backtrace due to multiple nested errors. Giving up...")))
         (with-output-to-string (*standard-output*)
@@ -199,5 +207,13 @@
               (when (symbolp decorator)
                 (bind ((*package* (find-package :keyword)))
                   (format t "~&~S:" decorator)))
-              (funcall decorator)))
+              (block invoking-decorator
+                (with-layered-error-handlers ((lambda (nested-error)
+                                                (format t "~&Error log decorator ~A signalled error: ~A." decorator nested-error))
+                                              (lambda (&key &allow-other-keys)
+                                                (return-from invoking-decorator))
+                                              :level-2-error-handler (lambda (nested-error2 &key &allow-other-keys)
+                                                                       (declare (ignore nested-error2))
+                                                                       (format t "Nested errors while calling error log decorator, skipping it...")))
+                  (funcall decorator)))))
           (format t "~&*** End of error details"))))))

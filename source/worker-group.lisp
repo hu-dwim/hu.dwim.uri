@@ -42,8 +42,7 @@
   (with-layered-error-handlers ((lambda (error)
                                   (worker-group.error (build-error-log-message :error-condition error :message (format nil "Error reached toplevel in worker ~A while executing job ~A" worker job)))
                                   (maybe-invoke-debugger error :context worker-group))
-                                (lambda (&rest args)
-                                  (declare (ignore args))
+                                (lambda (&key &allow-other-keys)
                                   (return-from worker-loop/run-one-job)))
     (with-thread-name " / running job"
       (funcall job))))
