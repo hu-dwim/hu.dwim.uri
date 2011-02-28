@@ -57,9 +57,10 @@
                (bind ((recursive? abort-unit-of-work/invoked?))
                  (setf abort-unit-of-work/invoked? #t)
                  (when recursive?
-                   (when log-to-debug-io
-                     (format *debug-io* "~&~S: ABORT-UNIT-OF-WORK-CALLBACK got called recursively, aborting the entire ~S block~%"
-                             'with-layered-error-handlers 'with-layered-error-handlers))
+                   (warn "~&~S: ABORT-UNIT-OF-WORK-CALLBACK got called recursively, aborting the entire ~S block~%"
+                         'with-layered-error-handlers 'with-layered-error-handlers)
+                   ;; quietly returning from the WITH-LAYERED-ERROR-HANDLERS block is not necessarily the best solution,
+                   ;; but killing the entire VM or thread is neither...
                    (return-from with-layered-error-handlers (values))))
                (apply abort-unit-of-work-callback :reason reason args))
              (handle-level-1-error (error)
