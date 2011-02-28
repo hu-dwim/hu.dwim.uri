@@ -49,10 +49,18 @@
  - OUT-OF-STORAGE-CALLBACK: (oos-condition &rest)"
   (declare (optimize (debug 2)))
   (remove-from-plistf args :log-to-debug-io :ignore-condition-callback :level-2-error-handler :giving-up-callback :out-of-storage-callback)
-  (bind ((level-1-error nil))
+  (bind ((level-1-error nil)
+         (abort-unit-of-work/invoked? #f))
     (labels ((ignore-error? (error)
                (apply ignore-condition-callback error args))
              (abort-unit-of-work (reason)
+               (bind ((recursive? abort-unit-of-work/invoked?))
+                 (setf abort-unit-of-work/invoked? #t)
+                 (when recursive?
+                   (when log-to-debug-io
+                     (format *debug-io* "~&~S: ABORT-UNIT-OF-WORK-CALLBACK got called recursively, aborting the entire ~S block~%"
+                             'with-layered-error-handlers 'with-layered-error-handlers))
+                   (return-from with-layered-error-handlers (values))))
                (apply abort-unit-of-work-callback :reason reason args))
              (handle-level-1-error (error)
                ;; first level of error handling, call around participants, give them a chance to render an error page, etc
