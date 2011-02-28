@@ -13,7 +13,7 @@
   (:method (context error)
     *debug-on-error*))
 
-(def (function e) print-error-safely (&optional message &rest args)
+(def (function ed) print-error-safely (&optional message &rest args)
   (when message
     (bind ((formatted (if args
                           (or (ignore-errors
@@ -27,7 +27,7 @@
         (terpri *error-output*)
         (finish-output *error-output*)))))
 
-(def (function e) maybe-invoke-debugger (condition &key context)
+(def (function ed) maybe-invoke-debugger (condition &key context)
   (when (debug-on-error? context condition)
     (when (fboundp 'invoke-slime-debugger)
       (restart-case
@@ -62,6 +62,7 @@
 
 (def (macro e) make-special-variable-printing-error-log-decorator (&rest variables)
   `(named-lambda make-special-variable-printing-error-log-decorator/body ()
+     (declare (optimize (debug 2)))
      (bind ((*package* (find-package "COMMON-LISP"))
             (*print-right-margin* 150))
        ,@(iter (for variable :in variables)

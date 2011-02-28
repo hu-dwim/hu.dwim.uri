@@ -19,22 +19,26 @@
                            &rest args &key
                            (log-to-debug-io #t)
                            (ignore-condition-callback (constantly #f))
-                           (level-2-error-handler (if log-to-debug-io
-                                                      (lambda (error &key message &allow-other-keys)
-                                                        (format *debug-io* "~A~%" (build-error-log-message :error-condition error
-                                                                                                           :message message))
-                                                        (maybe-invoke-debugger error))
-                                                      (lambda (error &key &allow-other-keys)
-                                                        (maybe-invoke-debugger error))))
-                           (giving-up-callback (if log-to-debug-io
-                                                   (lambda (&key reason &allow-other-keys)
-                                                     (format *debug-io* "WITH-LAYERED-ERROR-HANDLERS is giving up due to: ~A~%" reason))
-                                                   (constantly nil)))
-                           (out-of-storage-callback (if log-to-debug-io
-                                                        (lambda (error &key &allow-other-keys)
-                                                          ;; TODO if/when sbcl becomes more failure tolerant with stack overflows, we could try to log this using the logger infrastructure. until then, print something to *debug-io* and bail out...
-                                                          (format *debug-io* "WITH-LAYERED-ERROR-HANDLERS is bailing out due to a STORAGE-CONDITION of type ~S~%" (type-of error)))
-                                                        (constantly nil)))
+                           (level-2-error-handler (named-lambda with-layered-error-handlers/default-level-2-handler
+                                                      (error &key message &allow-other-keys)
+                                                    (declare (optimize (debug 3)))
+                                                    (when log-to-debug-io
+                                                      (format *debug-io* "~A~%" (build-error-log-message :error-condition error
+                                                                                                         :message message)))
+                                                    (maybe-invoke-debugger error)))
+                           (giving-up-callback (named-lambda with-layered-error-handlers/default-giving-up-callback
+                                                   (&key reason &allow-other-keys)
+                                                 (declare (optimize (debug 3)))
+                                                 (when log-to-debug-io
+                                                   (format *debug-io* "WITH-LAYERED-ERROR-HANDLERS is giving up due to: ~A~%" reason))
+                                                 nil))
+                           (out-of-storage-callback (named-lambda with-layered-error-handlers/default-out-of-storage-callback
+                                                        (error &key &allow-other-keys)
+                                                      (declare (optimize (debug 3)))
+                                                      ;; TODO if/when sbcl becomes more failure tolerant with stack overflows, we could try to log this using the logger infrastructure. until then, print something to *debug-io* and bail out...
+                                                      (when log-to-debug-io
+                                                        (format *debug-io* "WITH-LAYERED-ERROR-HANDLERS is bailing out due to a STORAGE-CONDITION of type ~S~%" (type-of error)))
+                                                      nil))
                            &allow-other-keys)
   "Below you can find the lambda lists of the input functions. &REST means the extra arguments of WITH-LAYERED-ERROR-HANDLERS that it didn't understand. It's advised to add &key &allow-other-keys for future compatibility wherever applicable.
  - LEVEL-1-ERROR-HANDLER: (original-condition &rest)
@@ -43,6 +47,7 @@
  - GIVING-UP-CALLBACK: (&key reason &rest)
  - IGNORE-CONDITION-CALLBACK: (condition &rest)
  - OUT-OF-STORAGE-CALLBACK: (oos-condition &rest)"
+  (declare (optimize (debug 2)))
   (remove-from-plistf args :log-to-debug-io :ignore-condition-callback :level-2-error-handler :giving-up-callback :out-of-storage-callback)
   (bind ((level-1-error nil))
     (labels ((ignore-error? (error)
@@ -107,7 +112,7 @@
           (with-debugger-hook-for-break #'with-layered-error-handlers/debugger-hook
             (-with-macro/body-)))))))
 
-(def function disabled-debugger-hook (condition &optional logger)
+(def (function d) disabled-debugger-hook (condition &optional logger)
   (bind ((message (or (ignore-errors
                         (build-error-log-message :error-condition condition
                                                  :message "Unhandled error while debugger is disabled, quitting..."))
@@ -172,7 +177,7 @@
   (awhen (find-package "BORDEAUX-THREADS")
     (funcall (find-symbol "THREAD-NAME" it) (funcall (find-symbol "CURRENT-THREAD" it)))))
 
-(def (function e) build-error-log-message (&key error-condition message (timestamp (get-universal-time)) (include-backtrace #t))
+(def (function ed) build-error-log-message (&key error-condition message (timestamp (get-universal-time)) (include-backtrace #t))
   "Message may also be a list, in which case FORMAT is applied on it."
   (with-backtrace-printer-bindings
     (block building
