@@ -6,6 +6,29 @@
 
 (in-package :hu.dwim.util)
 
+(def (function eo) sanitize-string (string lower-limit upper-limit &key (replacement #\?))
+  "By default sanitize for the printable ASCII range. Limits are inclusive."
+  (check-type string string)
+  (check-type replacement character)
+  (check-type lower-limit (or null non-negative-integer))
+  (check-type upper-limit (or null non-negative-integer))
+  (bind ((result (make-string (length string) :element-type (array-element-type string))))
+    (iter (for char :in-vector string)
+          (for char-code = (char-code char))
+          (for index :upfrom 0)
+          (setf (aref result index)
+                (if (or (and lower-limit
+                             (< char-code lower-limit))
+                        (and upper-limit
+                             (< upper-limit char-code)))
+                    replacement
+                    char)))
+    result))
+
+(def (function eo) sanitize-string/printable-ascii (string &key (replacement #\?))
+  (sanitize-string string 32 126 :replacement replacement))
+
+
 ;;;;;;
 ;;; Symbols
 
