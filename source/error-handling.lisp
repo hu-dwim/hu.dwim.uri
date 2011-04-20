@@ -17,28 +17,27 @@
 (def (with-macro* e) with-layered-error-handlers
     (level-1-error-handler abort-unit-of-work-callback
                            &rest args &key
-                           (log-to-trace-output #t)
+                           (log-to-error-output #t)
                            ;; TODO rename to ignore-condition-predicate
                            (ignore-condition-callback (constantly #f))
                            (level-2-error-handler (named-lambda with-layered-error-handlers/default-level-2-handler
                                                       (error &key message &allow-other-keys)
                                                     (declare (optimize (debug 3)))
-                                                    (when log-to-trace-output
-                                                      (format *trace-output* "~A~%" (build-error-log-message :error-condition error
-                                                                                                         :message message)))
+                                                    (when log-to-error-output
+                                                      (format *error-output* "~A~%" (build-error-log-message :error-condition error :message message)))
                                                     (maybe-invoke-debugger error)))
                            (giving-up-callback (named-lambda with-layered-error-handlers/default-giving-up-callback
                                                    (&key reason &allow-other-keys)
                                                  (declare (optimize (debug 3)))
-                                                 (when log-to-trace-output
-                                                   (format *trace-output* "WITH-LAYERED-ERROR-HANDLERS is giving up due to: ~A~%" reason))
+                                                 (when log-to-error-output
+                                                   (format *error-output* "WITH-LAYERED-ERROR-HANDLERS is giving up due to: ~A~%" reason))
                                                  nil))
                            (out-of-storage-callback (named-lambda with-layered-error-handlers/default-out-of-storage-callback
                                                         (error &key &allow-other-keys)
                                                       (declare (optimize (debug 3)))
-                                                      ;; TODO if/when sbcl becomes more failure tolerant with stack overflows, we could try to log this using the logger infrastructure. until then, print something to *trace-output* and bail out...
-                                                      (when log-to-trace-output
-                                                        (format *trace-output* "WITH-LAYERED-ERROR-HANDLERS is bailing out due to a STORAGE-CONDITION of type ~S~%" (type-of error)))
+                                                      ;; TODO if/when sbcl becomes more failure tolerant with stack overflows, we could try to log this using the logger infrastructure. until then, print something to *error-output* and bail out...
+                                                      (when log-to-error-output
+                                                        (format *error-output* "WITH-LAYERED-ERROR-HANDLERS is bailing out due to a STORAGE-CONDITION of type ~S~%" (type-of error)))
                                                       nil))
                            &allow-other-keys)
   "Below you can find the lambda lists of the input functions. &REST means the extra arguments of WITH-LAYERED-ERROR-HANDLERS that it didn't understand. It's advised to add &key &allow-other-keys for future compatibility wherever applicable.
@@ -49,7 +48,7 @@
  - IGNORE-CONDITION-CALLBACK: (condition &rest)
  - OUT-OF-STORAGE-CALLBACK: (oos-condition &rest)"
   (declare (optimize (debug 2)))
-  (remove-from-plistf args :log-to-trace-output :ignore-condition-callback :level-2-error-handler :giving-up-callback :out-of-storage-callback)
+  (remove-from-plistf args :log-to-error-output :ignore-condition-callback :level-2-error-handler :giving-up-callback :out-of-storage-callback)
   (bind ((level-1-error nil)
          (abort-unit-of-work/invoked? #f))
     (labels ((ignore-error? (error)
@@ -101,7 +100,7 @@
                ;; the request as soon as we can.
                (with-thread-activity-description ("HANDLE-LEVEL-3-ERROR")
                  (bind ((error-message (or (ignore-errors
-                                             (format nil "Nested error while handling original error: ~A; the second nested error is: ~A"
+                                             (format nil "Nested error while handling original error: ~A; the second, nested error is: ~A"
                                                      level-1-error error))
                                            (ignore-errors
                                              (format nil "Failed to log nested error message (nested print errors?). Condition type of the third nested error is ~S."
@@ -116,8 +115,8 @@
         (flet ((with-layered-error-handlers/debugger-hook (condition hook)
                  ;; this is only here because (break) ignores the *debugger-hook* variables, so it needs platform dependent care...
                  (declare (ignore hook))
-                 (when log-to-trace-output
-                   (format *trace-output* "~&WITH-LAYERED-ERROR-HANDLERS/DEBUGGER-HOOK is invoked, most probably because of CL:BREAK (if not, then that's a big WTF?!)~%"))
+                 (when log-to-error-output
+                   (format *error-output* "~&WITH-LAYERED-ERROR-HANDLERS/DEBUGGER-HOOK is invoked, most probably because of CL:BREAK (if not, then that's a big WTF?!)~%"))
                  (maybe-invoke-debugger condition)))
           (with-debugger-hook-for-break #'with-layered-error-handlers/debugger-hook
             (-with-macro/body-)))))))
