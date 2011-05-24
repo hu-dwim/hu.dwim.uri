@@ -9,7 +9,7 @@
 (with-muffled-redefinition-warnings
   (def (function o :inline :possible) get-monotonic-time ()
     "Returns such a time measure that constantly grows (it's a number in seconds, and it's unaffected by setting the system clock)."
-    (isys:get-monotonic-time)))
+    (iolib.os:get-monotonic-time)))
 
 (def (function e) posix-process-exists? (pid)
   (ignore-errors
