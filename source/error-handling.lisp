@@ -18,8 +18,7 @@
     (level-1-error-handler abort-unit-of-work-callback
                            &rest args &key
                            (log-to-error-output #t)
-                           ;; TODO rename to ignore-condition-predicate
-                           (ignore-condition-callback (constantly #f))
+                           (ignore-condition-predicate (constantly #f))
                            (level-2-error-handler (named-lambda with-layered-error-handlers/default-level-2-handler
                                                       (error &key message &allow-other-keys)
                                                     (declare (optimize (debug 3)))
@@ -45,14 +44,14 @@
  - LEVEL-2-ERROR-HANDLER: (nested-condition &key message &rest)
  - ABORT-UNIT-OF-WORK-CALLBACK: (&key reason &rest)
  - GIVING-UP-CALLBACK: (&key reason &rest)
- - IGNORE-CONDITION-CALLBACK: (condition &rest)
+ - IGNORE-CONDITION-PREDICATE: (condition &rest)
  - OUT-OF-STORAGE-CALLBACK: (oos-condition &rest)"
   (declare (optimize (debug 2)))
-  (remove-from-plistf args :log-to-error-output :ignore-condition-callback :level-2-error-handler :giving-up-callback :out-of-storage-callback)
+  (remove-from-plistf args :log-to-error-output :ignore-condition-predicate :level-2-error-handler :giving-up-callback :out-of-storage-callback)
   (bind ((level-1-error nil)
          (abort-unit-of-work/invoked? #f))
     (labels ((ignore-error? (error)
-               (apply ignore-condition-callback error args))
+               (apply ignore-condition-predicate error args))
              (abort-unit-of-work (reason)
                (bind ((recursive? abort-unit-of-work/invoked?))
                  (setf abort-unit-of-work/invoked? #t)
@@ -76,7 +75,7 @@
                             (apply out-of-storage-callback error args)
                           (setf reason "Error is a STORAGE-CONDITION")))
                        ((ignore-error? error)
-                        (setf reason "Error is to be ignored according to IGNORE-CONDITION-CALLBACK")
+                        (setf reason "Error is to be ignored according to the provided IGNORE-CONDITION-PREDICATE")
                         nil)
                        (t
                         (prog1
