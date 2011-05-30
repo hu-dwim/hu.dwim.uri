@@ -71,11 +71,10 @@
                      (cond
                        ((typep error 'storage-condition)
                         ;; on SBCL it includes control stack exhaustion, too
-                        (prog1
-                            (apply out-of-storage-callback error args)
-                          (setf reason "Error is a STORAGE-CONDITION")))
+                        (setf reason "Error is a STORAGE-CONDITION")
+                        (apply out-of-storage-callback error args))
                        ((ignore-error? error)
-                        (setf reason "Error is to be ignored according to the provided IGNORE-CONDITION-PREDICATE")
+                        (setf reason (format nil "Error (of type ~S) is to be ignored according to the provided IGNORE-CONDITION-PREDICATE ~A" (type-of error) ignore-condition-predicate))
                         nil)
                        (t
                         (prog1
