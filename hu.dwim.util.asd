@@ -24,7 +24,6 @@
                              (:file "integer-to-string" :depends-on ("package"))
                              (:file "iterate" :depends-on ("package"))
                              (:file "linear-mapping" :depends-on ("type"))
-                             (:file "mop" :depends-on ("package"))
                              (:file "number" :depends-on ("package"))
                              (:file "package")
                              (:file "place" :depends-on ("package"))
