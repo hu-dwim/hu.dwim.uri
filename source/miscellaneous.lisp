@@ -299,8 +299,11 @@
       (values `(,ind ,@temps)
               `(,index ,@vals)
               (list store)
-              ;; TODO accepting generlized booleans here is a potential source of bugs: e.g. (setf (bit-value x y) 0) will set it to 1
-              `(let ((,stemp (dpb (if ,store 1 0) (byte 1 ,ind) ,access-form)))
+              `(let ((,stemp (dpb (ecase ,store
+                                    ((t 1) 1)
+                                    ((nil 0) 0))
+                                  (byte 1 ,ind)
+                                  ,access-form)))
                  ,store-form
                  ,store)
               `(logbitp ,ind ,access-form)))))
