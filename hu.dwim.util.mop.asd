@@ -13,4 +13,5 @@
   :depends-on (:hu.dwim.util
                :closer-mop)
   :components ((:module "source"
-                :components ((:file "mop")))))
+                :components (#+sbcl(:file "compact-class" :depends-on ("mop"))
+                             (:file "mop")))))
