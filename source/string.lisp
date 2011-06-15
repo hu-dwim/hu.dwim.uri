@@ -131,6 +131,9 @@
             (princ separator string))
           (write-string el string))))
 
+(def (function e) make-adjustable-string (initial-contents)
+  (make-array (length initial-contents) :element-type 'character :initial-contents initial-contents :adjustable #t))
+
 ;;;;;;
 ;;; Roman numeral
 
