@@ -60,11 +60,11 @@
         (finally (return #t))))
 
 (def (function e) collect (element sequence &key (key #'identity) (test #'eq))
-  "Collects elements equal to ELEMENT from SEQUENCE."
+  "Collects elements equal to ELEMENT from SEQUENCE into a freshly allocated sequence."
   (remove element sequence :key key :test-not test))
 
 (def (function e) collect-if (predicate sequence &key (key #'identity))
-  "Collects elements from SEQUENCE for which the PREDICATE is true."
+  "Collects elements from SEQUENCE for which the PREDICATE is true into a freshly allocated sequence."
   (remove-if-not predicate sequence :key key))
 
 (def (function e) optional-list (&rest elements)
