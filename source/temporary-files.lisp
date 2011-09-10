@@ -80,10 +80,10 @@
   (assert (not (starts-with #\/ relative-path)))
   (bind ((root-directory (iolib.pathnames:file-path root-directory)))
     (iolib.pathnames:merge-file-paths relative-path
-                                      (iolib.pathnames:make-file-path :components (append (iolib.pathnames:file-path-directory (directory-for-temporary-files))
+                                      (iolib.pathnames:make-file-path :components (append (iolib.pathnames:file-path-components (directory-for-temporary-files))
                                                                                           (list temp-subdirectory-name)
-                                                                                          (rest (iolib.pathnames:file-path-directory root-directory)))
-                                                                      :defaults root-directory))))
+                                                                                          (rest (iolib.pathnames:file-path-components root-directory)))
+                                                                      :defaults (directory-for-temporary-files)))))
 
 (def (function e) shadow-temporary-filename (root-directory relative-path temp-subdirectory-name)
   (iolib.pathnames:file-path-namestring (shadow-temporary-file-path root-directory relative-path temp-subdirectory-name)))
