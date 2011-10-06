@@ -106,7 +106,7 @@
            (every (lambda (slot)
                     (g= (slot-value-using-class class-1 object-1 slot)
                         (slot-value-using-class class-2 object-2 slot)))
-                  (class-slots class-1)))))
+                  (class-slots (ensure-finalized class-1))))))
 
   (:method ((object-1 standard-object) (object-2 standard-object))
     (let ((class-1 (class-of object-1))
@@ -117,4 +117,4 @@
                              (not (slot-boundp-using-class class-2 object-2 slot)))
                         (g= (slot-value-using-class class-1 object-1 slot)
                             (slot-value-using-class class-2 object-2 slot))))
-                  (class-slots class-1))))))
+                  (class-slots (ensure-finalized class-1)))))))

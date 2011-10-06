@@ -290,9 +290,10 @@
 (def (function ioe) find-slot (class-or-name slot-name &key (otherwise :error otherwise?))
   (or (find slot-name
             (the list
-              (class-slots (if (symbolp class-or-name)
-                               (find-class class-or-name)
-                               class-or-name)))
+              (class-slots (ensure-finalized
+                            (if (symbolp class-or-name)
+                                (find-class class-or-name)
+                                class-or-name))))
             :key 'slot-definition-name
             :test 'eq)
       (handle-otherwise (error "Cannot find slot ~S in class ~A" slot-name class-or-name))))
