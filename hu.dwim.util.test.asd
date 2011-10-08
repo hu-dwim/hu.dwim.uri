@@ -21,10 +21,12 @@
                :hu.dwim.util.source
                :hu.dwim.util.standard-process
                :hu.dwim.util.threads
+               :hu.dwim.util.uri
                :hu.dwim.util.worker-group
                :hu.dwim.util.soap)
   :components ((:module "test"
                 :components ((:file "package")
                              (:file "suite" :depends-on ("package"))
+                             (:file "uri" :depends-on ("suite"))
                              (:file "util" :depends-on ("suite"))
                              (:file "zlib" :depends-on ("suite"))))))
