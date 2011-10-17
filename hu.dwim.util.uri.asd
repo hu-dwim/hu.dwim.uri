@@ -11,6 +11,7 @@
 (defsystem :hu.dwim.util.uri
   :class hu.dwim.system
   :depends-on (:babel
+               :cl-ppcre
                :hu.dwim.util
                :split-sequence)
   :components ((:module "source"
