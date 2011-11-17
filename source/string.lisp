@@ -124,10 +124,11 @@
 (def compiler-macro string+ (&rest args)
   `(concatenate 'string ,@args))
 
-(def (function eo) join-strings (separator &rest strings)
+(def (function eo) join-strings (strings &optional separator)
   (with-output-to-string (string)
     (iter (for el :in-sequence strings)
-          (unless (first-time-p)
+          (when (and separator
+                     (not (first-time-p)))
             (princ separator string))
           (write-string el string))))
 
