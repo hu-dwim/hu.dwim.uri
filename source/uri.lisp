@@ -52,7 +52,7 @@
 (def (constant :test 'equalp) +uri/character-ok-table/scheme+ (to-character-ok-table +uri/allowed-characters/scheme+))
 
 (def (function io) uri/split-path (path-string)
-  (split-sequence:split-sequence #\/ path-string :remove-empty-subseqs #t))
+  (split-sequence #\/ path-string :remove-empty-subseqs #t))
 
 ;;;;;;
 ;;; conditions

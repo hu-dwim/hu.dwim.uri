@@ -111,6 +111,58 @@
               (incf position (length part)))
             (incf position))))
 
+(def (function oe) split-sequence (delimiter seq &key (count nil) (remove-empty-subseqs nil) (from-end nil) (start 0) (end (length seq)) test test-not key)
+  "Return a list of subsequences in seq delimited by delimiter.
+
+If :remove-empty-subseqs is NIL, empty subsequences will be included
+in the result; otherwise they will be discarded.  All other keywords
+work analogously to those for CL:SUBSTITUTE.  In particular, the
+behaviour of :from-end is possibly different from other versions of
+this function; :from-end values of NIL and T are equivalent unless
+:count is supplied. The second return value is an index suitable as an
+argument to CL:SUBSEQ into the sequence indicating where processing
+stopped."
+  (declare (type array-index start end)
+           (type (or null array-index) count)
+           (type (or list vector) seq))
+  (if from-end
+      (loop
+         for right of-type array-index = end then left
+         for left of-type array-index = (max (or (position delimiter seq
+                                                           :end right :from-end t
+                                                           :test test :test-not test-not
+                                                           :key key)
+                                                 -1)
+                                             (1- start))
+         unless (and (= right (1+ left))
+                     remove-empty-subseqs) ; empty subseq we don't want
+         if (and count (>= nr-elts count))
+           ;; We can't take any more. Return now.
+           return (values (nreverse subseqs) right)
+         else
+           collect (subseq seq (1+ left) right) into subseqs
+           and sum 1 into nr-elts of-type array-index
+         until (< left start)
+         finally (return (values (nreverse subseqs) (1+ left))))
+      (loop
+         for left of-type array-index = start then (+ right 1)
+         for right of-type array-index = (min (or (position delimiter seq
+                                                            :start left
+                                                            :test test :test-not test-not
+                                                            :key key)
+                                                  end)
+                                              end)
+         unless (and (= right left)
+                     remove-empty-subseqs) ; empty subseq we don't want
+         if (and count (>= nr-elts count))
+           ;; We can't take any more. Return now.
+           return (values subseqs left)
+         else
+           collect (subseq seq left right) into subseqs
+           and sum 1 into nr-elts of-type array-index
+         until (>= right end)
+         finally (return (values subseqs right)))))
+
 (def (function e) substitute-all (old-elements new-element sequence &key (test #'eql) (start 0) count end key from-end)
   (bind ((sequence (copy-seq sequence)))
     (iter (for old-element :in-sequence old-elements)

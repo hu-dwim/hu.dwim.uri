@@ -12,7 +12,6 @@
   :class hu.dwim.system
   :depends-on (:babel
                :cl-ppcre
-               :hu.dwim.util
-               :split-sequence)
+               :hu.dwim.util)
   :components ((:module "source"
                 :components ((:file "uri")))))
