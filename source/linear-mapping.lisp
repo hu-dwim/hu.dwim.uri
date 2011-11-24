@@ -37,32 +37,39 @@
     :type hash-table
     :initform (make-hash-table :test #'equal)
     :initarg :cache
-    :accessor cache-of)))
+    :accessor cache-of)
+   (lock
+    :accessor lock-of)))
+
+(def constructor (linear-mapping comparator)
+  (setf (lock-of -self-) (bordeaux-threads:make-recursive-lock (format nil "lock for a LINEAR-MAPPING with comparator ~S" comparator))))
 
 (def print-object linear-mapper
   (format t "~A : ~A" (key-of -self-) (value-of -self-)))
 
 (def (function e) linear-mapping-value (mapping key)
-  (bind (((:read-only-slots mappers cache) mapping))
-    (or (gethash key cache)
-        (setf (gethash key cache)
-              (value-of (first (sort (iter (for mapper :in mappers)
-                                           (when (funcall (predicate-of mapper) key)
-                                             (collect mapper :into result))
-                                           (finally
-                                            (return (or result
-                                                        (error "No mapper found for key ~A in ~A" key mapping)))))
-                                     (lambda (mapper-1 mapper-2)
-                                       (< (funcall (comparator-of mapping) mapper-1 mapper-2) 0)))))))))
+  (bordeaux-threads:with-recursive-lock-held ((lock-of mapping))
+    (bind (((:read-only-slots mappers cache) mapping))
+      (or (gethash key cache)
+          (setf (gethash key cache)
+                (value-of (first (sort (iter (for mapper :in mappers)
+                                             (when (funcall (predicate-of mapper) key)
+                                               (collect mapper :into result))
+                                             (finally
+                                              (return (or result
+                                                          (error "No mapper found for key ~A in ~A" key mapping)))))
+                                       (lambda (mapper-1 mapper-2)
+                                         (< (funcall (comparator-of mapping) mapper-1 mapper-2) 0))))))))))
 
 (def function insert-mapper (mapping mapper)
-  (bind (((:slots mappers cache) mapping)
-         (old-mapper (find mapper mappers :test (lambda (mapper-1 mapper-2)
-                                                  (zerop (funcall (comparator-of mapping) mapper-1 mapper-2))))))
-    (when old-mapper
-      (setf mappers (remove old-mapper mappers)))
-    (pushnew mapper mappers)
-    (clrhash cache)))
+  (bordeaux-threads:with-recursive-lock-held ((lock-of mapping))
+    (bind (((:slots mappers cache) mapping)
+           (old-mapper (find mapper mappers :test (lambda (mapper-1 mapper-2)
+                                                    (zerop (funcall (comparator-of mapping) mapper-1 mapper-2))))))
+      (when old-mapper
+        (setf mappers (remove old-mapper mappers)))
+      (pushnew mapper mappers)
+      (clrhash cache))))
 
 ;;;;;;
 ;;; Linear type mapping
