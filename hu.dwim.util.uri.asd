@@ -12,6 +12,7 @@
   :class hu.dwim.system
   :depends-on (:babel
                :cl-ppcre
-               :hu.dwim.util)
+               :hu.dwim.util+iolib
+               :iolib.sockets)
   :components ((:module "source"
                 :components ((:file "uri")))))

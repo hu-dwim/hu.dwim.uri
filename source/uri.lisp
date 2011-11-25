@@ -81,6 +81,9 @@
    (path
     nil
     :type (or null string))
+   (path-had-leading-slash?
+    #f
+    :type boolean)
    (query
     nil
     :type (or null string))
@@ -102,14 +105,15 @@
 ;;;;;;
 ;;; API stuff
 
-(def (function ie) make-uri (&key scheme host port path query fragment)
+(def (function ie) make-uri (&key scheme host port path path-had-leading-slash? query fragment)
   (check-type path (or string list))
+  (check-type path-had-leading-slash? boolean)
   (check-type port (or null non-negative-integer))
   (check-type scheme   (or null string))
   (check-type host     (or null string))
   (check-type query    (or null string))
   (check-type fragment (or null string))
-  (make-instance 'uri :scheme scheme :host host :port port :path (ensure-list path)
+  (make-instance 'uri :scheme scheme :host host :port port :path (ensure-list path) :path-had-leading-slash? path-had-leading-slash?
                  :query query :fragment fragment))
 
 (def (function ie) clone-uri (uri &key (scheme nil scheme-provided?) (host nil host-provided?) (port nil port-provided?)
@@ -195,12 +199,12 @@
         (write-string "//" stream)
         ;; don't percent-escape host
         (etypecase host
-          (iolib:ipv6-address
+          (iolib.sockets:ipv6-address
            (write-char #\[ stream)
-           (write-string (iolib:address-to-string host) stream)
+           (write-string (iolib.sockets:address-to-string host) stream)
            (write-char #\] stream))
-          (iolib:ipv4-address
-           (write-string (iolib:address-to-string host) stream))
+          (iolib.sockets:ipv4-address
+           (write-string (iolib.sockets:address-to-string host) stream))
           (string
            ;; NOTE idna escaping wouldn't be appropriate here
            (write-string host stream))))
@@ -209,7 +213,9 @@
         (princ port stream))
       (iter (for el :in path)
             (write-char #\/ stream)
-            (out el)))))
+            (out el))
+      (when (path-had-leading-slash? uri)
+        (write-char #\/ stream)))))
 
 (def (function o) uri/write (uri stream &key (escape t) (extra-parameters '()))
   (uri/write/sans-query uri stream :escape escape)
@@ -342,6 +348,7 @@
                                      (uri-parse-error "Port ~S is not a non-negative integer" port-string))
                                    port)))
                    :path     (mapcar 'uri/percent-encoding/decode (uri/split-path (aref pieces 6)))
+                   :path-had-leading-slash? (ends-with #\/ (aref pieces 6))
                    :query    (aref pieces 8) ; see URI/PARSE-QUERY-PARAMETERS
                    :fragment (process 10)))))
     (string

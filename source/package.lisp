@@ -12,6 +12,10 @@
         :hu.dwim.def
         :hu.dwim.syntax-sugar)
   (:export
+   #:host
+   #:port
+   #:query
+   #:query-of
    #:otherwise
    #:otherwise?)
   (:readtable-setup
