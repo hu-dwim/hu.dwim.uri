@@ -23,7 +23,7 @@
 ;;;;;;
 ;;; Production support
 
-(def (function e) ensure-utf-8-external-format ()
+(def (function e) ensure-default-external-format-is-utf-8 ()
   #+sbcl
   (unless (eq (sb-impl::default-external-format) :utf-8)
     (cerror "Ignore" "The default external format is ~S, but UTF-8 is strongly advised! Check your $LANG env variable..."
