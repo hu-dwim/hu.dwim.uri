@@ -14,9 +14,11 @@
   :depends-on (:cl-fad
                :command-line-arguments
                :hu.dwim.logger
+               :hu.dwim.perec.postgresql     ; TODO drop dependency
                :hu.dwim.util.error-handling
                :hu.dwim.util.temporary-files
                :hu.dwim.util+iolib
+               :hu.dwim.web-server.application ; TODO drop dependency
                :iolib.syscalls)
   :components ((:module "source"
                 :components ((:file "production")
