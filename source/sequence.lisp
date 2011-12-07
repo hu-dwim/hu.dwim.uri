@@ -172,6 +172,30 @@ stopped."
 ;;;;;;
 ;;; tree
 
+(def (function e) map/tree (visitor sequence &key (key 'identity))
+  "Depth-first, returns with (VALUES)."
+  (ensure-functionf key)
+  (labels
+      ((recurse (sequence)
+         (loop
+           :for el :in sequence :do
+           (progn
+             (funcall visitor (funcall key el))
+             (when (consp el)
+               (recurse el))))))
+    (recurse sequence)
+    (values)))
+
+(def (function e) find/tree (item sequence &key (key 'identity) (test 'eql))
+  (ensure-functionf test)
+  (block searching
+    (map/tree (lambda (el)
+                (when (funcall test item el)
+                  (return-from searching el)))
+              sequence :key key)
+    nil))
+
+#+nil ; TODO delme
 (def (function e) find/tree (item sequence &key (key 'identity) (test 'eql))
   (ensure-functionf key test)
   (block searching
