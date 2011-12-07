@@ -111,5 +111,12 @@
          (-with-macro/body- (stream variable-name))
       (delete-file stream))))
 
+(def (macro e) with-temporary-files ((&rest entries) &body body)
+  (if entries
+      `(with-temporary-file ,(first entries)
+         (with-temporary-files ,(rest entries) ,@body))
+      `(progn
+         ,@body)))
+
 (def (function e) substitute-illegal-characters-in-file-name (name &key (replacement #\_))
   (substitute-all "/?*\"" replacement name))
