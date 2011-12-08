@@ -13,8 +13,7 @@
                                        (let ((swank::*loopback-interface* "127.0.0.1"))
                                          (swank:create-server :port port
                                                               :style :spawn
-                                                              :dont-close #t
-                                                              :coding-system "utf-8-unix")))
+                                                              :dont-close #t)))
                                      #t)))
     (if started?
         (format *debug-io* "Swank server has been started~%")
