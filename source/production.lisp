@@ -256,7 +256,7 @@
                                         (hu.dwim.web-server:processed-request-counter-of hdws-server))
                                       (/ (sb-kernel::dynamic-usage) 1024 1024)
                                       (when hdws-server
-                                        (mapcar (compose 'hash-table-count 'session-id->session-of)
+                                        (mapcar (compose 'hash-table-count 'hu.dwim.web-server:session-id->session-of)
                                                 (collect-if (of-type 'hu.dwim.web-server:application)
                                                             (hu.dwim.web-server:brokers-of hdws-server))))))
                            (session-purge ()
@@ -270,7 +270,7 @@
                       (%register-timer-entry "Console status printer" (* 60 10) #'console-status-printer)
                       (%register-timer-entry "Session purge" 60 #'session-purge)
                       (%register-timer-entry "Quit request checker" 5 #'quit-request-checker)
-                      (%register-timer-entry "Log flusher" 5 'flush-caching-appenders)
+                      (%register-timer-entry "Log flusher" 5 'hu.dwim.logger:flush-caching-appenders)
                       #+nil
                       (%register-timer-entry "Status logger" 5
                                              ;; TODO log some useful info like the number of web sessions, etc...
