@@ -318,7 +318,7 @@
     (string
      (uri/percent-encoding/decode (coerce input 'simple-base-string)))))
 
-(def (function eo) parse-uri (uri)
+(def (function eo) parse-uri (uri &key (lazy #f))
   ;; can't use :sharedp, because we expect the returned pieces to be simple-base-string's and :sharedp would return displaced arrays
   (etypecase uri
     (simple-base-string
@@ -333,24 +333,27 @@
          (declare (inline process)
                   (dynamic-extent #'process))
          ;; call uri/percent-encoding/decode on each piece separately, so some of them may remain simple-base-string even if other pieces contain unicode
-         (make-uri :scheme   (bind ((scheme (aref pieces 1)))
-                               (when (and scheme
-                                          (not (is-string-ok? scheme +uri/character-ok-table/scheme+)))
-                                 (uri-parse-error "Scheme ~S contains illegal characters" scheme))
-                               scheme)
-                   :host     (awhen (aref pieces 3)
-                               (uri/percent-encoding/decode it))
-                   :port     (bind ((port-string (aref pieces 5)))
-                               (when port-string
-                                 (bind (((:values port position) (parse-integer port-string :junk-allowed #t)))
-                                   (when (or (< port 0)
-                                             (not (eql position (length port-string))))
-                                     (uri-parse-error "Port ~S is not a non-negative integer" port-string))
-                                   port)))
-                   :path     (mapcar 'uri/percent-encoding/decode (uri/split-path (aref pieces 6)))
-                   :path-had-leading-slash? (ends-with #\/ (aref pieces 6))
-                   :query    (aref pieces 8) ; see URI/PARSE-QUERY-PARAMETERS
-                   :fragment (process 10)))))
+         (aprog1
+             (make-uri :scheme   (bind ((scheme (aref pieces 1)))
+                                   (when (and scheme
+                                              (not (is-string-ok? scheme +uri/character-ok-table/scheme+)))
+                                     (uri-parse-error "Scheme ~S contains illegal characters" scheme))
+                                   scheme)
+                       :host     (awhen (aref pieces 3)
+                                   (uri/percent-encoding/decode it))
+                       :port     (bind ((port-string (aref pieces 5)))
+                                   (when port-string
+                                     (bind (((:values port position) (parse-integer port-string :junk-allowed #t)))
+                                       (when (or (< port 0)
+                                                 (not (eql position (length port-string))))
+                                         (uri-parse-error "Port ~S is not a non-negative integer" port-string))
+                                       port)))
+                       :path     (mapcar 'uri/percent-encoding/decode (uri/split-path (aref pieces 6)))
+                       :path-had-leading-slash? (ends-with #\/ (aref pieces 6))
+                       :query    (aref pieces 8) ; see URI/PARSE-QUERY-PARAMETERS
+                       :fragment (process 10))
+           (unless lazy
+             (query-parameters-of it))))))
     (string
      (parse-uri (coerce uri 'simple-base-string)))))
 
