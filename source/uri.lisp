@@ -15,7 +15,7 @@
 ;;;;;;
 ;;; constants and tables
 
-(def (constant :test 'equalp) +uri/alphanumeric-characters+
+(def (constant :test 'equalp) +alphanumeric-characters+
   (flet ((series (low high)
            (iter (for i :from (char-code low) :to (char-code high))
                  (collect (code-char i)))))
@@ -41,17 +41,17 @@
           (return #f))
         (finally (return string))))
 
-(def (constant :test 'equalp) +uri/delimiter-characters+ ";/?:@&=+$,")
-(def (constant :test 'equalp) +uri/unreserved-characters+ (string+ +uri/alphanumeric-characters+ "-_.!~*'()"))
-(def (constant :test 'equalp) +uri/allowed-characters/scheme+ (string+ +uri/alphanumeric-characters+ "+-."))
+(def (constant :test 'equalp) +delimiter-characters+ ";/?:@&=+$,")
+(def (constant :test 'equalp) +allowed-characters+ (string+ +alphanumeric-characters+ "-_.!~*'()"))
+(def (constant :test 'equalp) +allowed-characters/scheme+ (string+ +alphanumeric-characters+ "+-."))
 
 ;; The list of characters which don't need to be escaped when writing URIs.
 ;; This list is inherently a heuristic, because different uri components may have
 ;; different escaping needs, but it should work fine for http.
-(def (constant :test 'equalp) +uri/character-ok-table+ (to-character-ok-table +uri/unreserved-characters+))
-(def (constant :test 'equalp) +uri/character-ok-table/scheme+ (to-character-ok-table +uri/allowed-characters/scheme+))
+(def (constant :test 'equalp) +character-ok-table+ (to-character-ok-table +allowed-characters+))
+(def (constant :test 'equalp) +character-ok-table/scheme+ (to-character-ok-table +allowed-characters/scheme+))
 
-(def (function io) uri/split-path (path-string)
+(def (function io) split-path (path-string)
   (split-sequence #\/ path-string :remove-empty-subseqs #t))
 
 ;;;;;;
@@ -104,7 +104,7 @@
     :type (or null string))
    (query-parameters
     :unbound
-    :documentation "A cache for URI/PARSE-QUERY-PARAMETERS."
+    :documentation "A cache for PARSE-QUERY-PARAMETERS."
     :type list)
    (fragment nil)))
 
@@ -115,7 +115,7 @@
     (make-load-form-saving-slots self :environment env :slot-names slot-names)))
 
 (def print-object (uri :identity nil)
-  (uri/write -self- *standard-output* :escape #f))
+  (write-uri -self- *standard-output* :escape #f))
 
 ;;;;;;
 ;;; API stuff
@@ -149,55 +149,55 @@
   (unless (slot-boundp self 'query-parameters)
     (setf (query-parameters-of self) (awhen (query-of self)
                                        (with-resignalled-errors
-                                         (uri/parse-query-parameters it))))))
+                                         (parse-query-parameters it))))))
 
-(def (function e) uri/query-parameter-value (uri name)
+(def (function e) query-parameter-value (uri name)
   (assoc-value (query-parameters-of uri) name :test #'string=))
 
-(def (function e) (setf uri/query-parameter-value) (value uri name)
+(def (function e) (setf query-parameter-value) (value uri name)
   (if value
       (setf (assoc-value (query-parameters-of uri) name :test #'string=) value)
       (removef (query-parameters-of uri) name :test #'string= :key #'car))
   value)
 
-(def (function e) uri/add-query-parameter (uri name value)
+(def (function e) add-query-parameter (uri name value)
   (nconcf (query-parameters-of uri) (list (cons name value)))
   uri)
 
-(def (function e) uri/delete-query-parameters (uri &rest names)
+(def (function e) delete-query-parameters (uri &rest names)
   (setf (query-parameters-of uri)
         (delete-if (lambda (el)
                      (member (car el) names :test #'string=))
                    (query-parameters-of uri)))
   uri)
 
-(def (function e) uri/delete-all-query-parameters (uri)
+(def (function e) delete-all-query-parameters (uri)
   (setf (query-parameters-of uri) '())
   uri)
 
-(def (function e) uri/copy-query-parameters (from to &rest parameter-names)
+(def (function e) copy-query-parameters (from to &rest parameter-names)
   (dolist (name parameter-names)
-    (setf (uri/query-parameter-value to name)
-          (uri/query-parameter-value from name))))
+    (setf (query-parameter-value to name)
+          (query-parameter-value from name))))
 
-(def (function e) uri/copy-all-query-parameters (from to)
+(def (function e) copy-all-query-parameters (from to)
   (setf (query-parameters-of to)
         (copy-alist (query-parameters-of from))))
 
-(def (function e) uri/append-path (uri path)
-  (bind ((path (if (stringp path) (uri/split-path path) path)))
+(def (function e) append-path (uri path)
+  (bind ((path (if (stringp path) (split-path path) path)))
     (setf (path-of uri) (append (path-of uri) path)))
   uri)
 
-(def (function e) uri/prepend-path (uri path)
-  (bind ((path (if (stringp path) (uri/split-path path) path)))
+(def (function e) prepend-path (uri path)
+  (bind ((path (if (stringp path) (split-path path) path)))
     (setf (path-of uri) (append path (path-of uri))))
   uri)
 
 ;;;;;;
 ;;; printing and parsing
 
-(def (function o) uri/write/sans-query (uri stream &key (escape #t))
+(def (function o) write-uri/sans-query (uri stream &key (escape #t))
   "Write URI to STREAM, only write scheme, host and path."
   (bind ((scheme (scheme-of uri))
          (host (host-of uri))
@@ -233,8 +233,8 @@
       (when (path-had-leading-slash? uri)
         (write-char #\/ stream)))))
 
-(def (function o) uri/write (uri stream &key (escape t) (extra-parameters '()))
-  (uri/write/sans-query uri stream :escape escape)
+(def (function o) write-uri (uri stream &key (escape t) (extra-parameters '()))
+  (write-uri/sans-query uri stream :escape escape)
   (labels ((out (string)
              (funcall (if escape
                           #'write-in-percent-encoding
@@ -248,17 +248,17 @@
       (write-char #\# stream)
       (out it))))
 
-(def (function e) uri/print-to-string (uri &key (escape #t) (extra-parameters '()))
+(def (function e) print-uri-to-string (uri &key (escape #t) (extra-parameters '()))
   (bind ((*print-pretty* #f)
          (*print-circle* #f))
     (with-output-to-string (string)
-      (uri/write uri string :escape escape :extra-parameters extra-parameters))))
+      (write-uri uri string :escape escape :extra-parameters extra-parameters))))
 
-(def function uri/print-to-string/sans-query (uri &key (escape #t))
+(def function print-uri-to-string/sans-query (uri &key (escape #t))
   (bind ((*print-pretty* #f)
          (*print-circle* #f))
     (with-output-to-string (string)
-      (uri/write/sans-query uri string :escape escape))))
+      (write-uri/sans-query uri string :escape escape))))
 
 (def (function o) write-in-percent-encoding (string stream)
   (check-type string string)
@@ -266,27 +266,27 @@
   (loop
     :for char-code :of-type (unsigned-byte 8) :across (the (simple-array (unsigned-byte 8) (*))
                                                         (babel:string-to-octets string :encoding :utf-8 :use-bom #f))
-    :do (if (aref #.+uri/character-ok-table+ char-code)
+    :do (if (aref #.+character-ok-table+ char-code)
             (write-char (code-char char-code) stream)
             (progn
               ;; this would be much slower... (format stream "%~2,'0X" char-code)
               (write-char #\% stream)
               (write-string (integer-to-string char-code :base 16) stream)))))
 
-(def (function eo) uri/percent-encoding/encode (string)
+(def (function eo) percent-encoding/encode (string)
   "Escapes all non alphanumeric characters in STRING following the URI convention. Returns a fresh string."
   (bind ((*print-pretty* #f)
          (*print-circle* #f))
     (with-output-to-string (escaped nil :element-type 'base-char)
       (write-in-percent-encoding string escaped))))
 
-(def (function eo) uri/percent-encoding/decode (input)
+(def (function eo) percent-encoding/decode (input)
   "URI unescape based on http://www.ietf.org/rfc/rfc2396.txt"
   (etypecase input
     (simple-base-string
      (let ((input-length (length input)))
        (when (zerop input-length)
-         (return-from uri/percent-encoding/decode ""))
+         (return-from percent-encoding/decode ""))
        (bind ((seen-escaped? #f)
               (seen-escaped-non-ascii? #f)
               (input-index 0)
@@ -296,7 +296,7 @@
                     (when (>= input-index input-length)
                       (if must-exists-p
                           (uri-parse-error "Unexpected end of input on ~S" input)
-                          (return-from uri/percent-encoding/decode (if seen-escaped?
+                          (return-from percent-encoding/decode (if seen-escaped?
                                                                    (if seen-escaped-non-ascii?
                                                                        (babel:octets-to-string output :encoding :utf-8)
                                                                        (babel:octets-to-string output :encoding :us-ascii))
@@ -332,7 +332,7 @@
                     (write-next-byte #.(char-code #\Space))))
            (parse)))))
     (string
-     (uri/percent-encoding/decode (coerce input 'simple-base-string)))))
+     (percent-encoding/decode (coerce input 'simple-base-string)))))
 
 (def (function eo) parse-uri (uri-string &key (lazy #f))
   "Parse a percent-encoded URI string into an object of type URI."
@@ -347,19 +347,19 @@
                             (bind ((piece (aref pieces index)))
                               (values (if (and piece
                                                (not (zerop (length piece))))
-                                          (uri/percent-encoding/decode piece)
+                                          (percent-encoding/decode piece)
                                           nil)))))
                      (declare (inline process)
                               (dynamic-extent #'process))
-                     ;; call uri/percent-encoding/decode on each piece separately, so some of them may remain simple-base-string even if other pieces contain unicode
+                     ;; call PERCENT-ENCODING/DECODE on each piece separately, so some of them may remain simple-base-string even if other pieces contain unicode
                      (aprog1
                          (make-uri :scheme   (bind ((scheme (aref pieces 1)))
                                                (when (and scheme
-                                                          (not (is-string-ok? scheme +uri/character-ok-table/scheme+)))
+                                                          (not (is-string-ok? scheme +character-ok-table/scheme+)))
                                                  (uri-parse-error "Scheme ~S contains illegal characters" scheme))
                                                scheme)
                                    :host     (awhen (aref pieces 3)
-                                               (uri/percent-encoding/decode it))
+                                               (percent-encoding/decode it))
                                    :port     (bind ((port-string (aref pieces 5)))
                                                (when port-string
                                                  (bind (((:values port position) (parse-integer port-string :junk-allowed #t)))
@@ -367,9 +367,9 @@
                                                              (not (eql position (length port-string))))
                                                      (uri-parse-error "Port ~S is not a non-negative integer" port-string))
                                                    port)))
-                                   :path     (mapcar 'uri/percent-encoding/decode (uri/split-path (aref pieces 6)))
+                                   :path     (mapcar 'percent-encoding/decode (split-path (aref pieces 6)))
                                    :path-had-leading-slash? (ends-with #\/ (aref pieces 6))
-                                   :query    (aref pieces 8) ; see URI/PARSE-QUERY-PARAMETERS
+                                   :query    (aref pieces 8) ; see PARSE-QUERY-PARAMETERS
                                    :fragment (process 10))
                        (unless lazy
                          (query-parameters-of it)))))))
@@ -425,7 +425,7 @@
            (push ,param ,params))
        ,params)))
 
-(def (function eo) uri/parse-query-parameters (param-string &key initial-parameters (sideffect-initial-parameters #f))
+(def (function eo) parse-query-parameters (param-string &key initial-parameters (sideffect-initial-parameters #f))
   "Parse PARAM-STRING into an alist. The value part will be a list if the given parameter was found multiple times."
   (declare (type simple-base-string param-string))
   (labels ((make-displaced-array (array &optional (start 0) (end (length array)))
@@ -446,8 +446,8 @@
                     (value (if (zerop (- value-end value-start))
                                ""
                                (make-displaced-array param-string value-start value-end)))
-                    (unescaped-key (uri/percent-encoding/decode key))
-                    (unescaped-value (uri/percent-encoding/decode value)))
+                    (unescaped-key (percent-encoding/decode key))
+                    (unescaped-value (percent-encoding/decode value)))
                (cons unescaped-key unescaped-value))))
     (when (and param-string
                (< 0 (length param-string)))
