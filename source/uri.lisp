@@ -213,7 +213,6 @@
         (write-char #\: stream))
       (when host
         (write-string "//" stream)
-        ;; don't percent-escape host
         (etypecase host
           (iolib.sockets:ipv6-address
            (write-char #\[ stream)
@@ -222,8 +221,8 @@
           (iolib.sockets:ipv4-address
            (write-string (iolib.sockets:address-to-string host) stream))
           (string
-           ;; NOTE idna escaping wouldn't be appropriate here
-           (write-string host stream))))
+           ;; NOTE idna escaping wouldn't be appropriate here (only needed when talking to the low-level DNS infrastructure)
+           (out host))))
       (when port
         (write-char #\: stream)
         (princ port stream))
