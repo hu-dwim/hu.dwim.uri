@@ -57,13 +57,28 @@
 ;;;;;;
 ;;; conditions
 
-(def (condition e) uri-parse-error (simple-parse-error)
-  ())
+(def special-variable *uri-string* nil
+  "Holds the uri string currently being parsed.")
+
+(def (condition* e) uri-parse-error (simple-parse-error nested-condition)
+  ((uri-string *uri-string*)))
 
 (def function uri-parse-error (message &rest args)
   (error 'uri-parse-error
          :format-control message
          :format-arguments args))
+
+(def function uri-parse-error/nested (nested-error message &rest args)
+  (error 'uri-parse-error
+         :nested-condition nested-error
+         :format-control message
+         :format-arguments args))
+
+(def macro with-resignalled-errors (&body body)
+  `(handler-bind ((babel-encodings:character-decoding-error
+                   (lambda (error)
+                     (uri-parse-error/nested error (princ-to-string error)))))
+     ,@body))
 
 ;;;;;;
 ;;; uri object
@@ -133,7 +148,8 @@
 (def method query-parameters-of :before ((self uri))
   (unless (slot-boundp self 'query-parameters)
     (setf (query-parameters-of self) (awhen (query-of self)
-                                       (uri/parse-query-parameters it)))))
+                                       (with-resignalled-errors
+                                         (uri/parse-query-parameters it))))))
 
 (def (function e) uri/query-parameter-value (uri name)
   (assoc-value (query-parameters-of uri) name :test #'string=))
@@ -318,44 +334,52 @@
     (string
      (uri/percent-encoding/decode (coerce input 'simple-base-string)))))
 
-(def (function eo) parse-uri (uri &key (lazy #f))
-  ;; can't use :sharedp, because we expect the returned pieces to be simple-base-string's and :sharedp would return displaced arrays
-  (etypecase uri
-    (simple-base-string
-     (bind ((pieces (nth-value 1 (cl-ppcre:scan-to-strings "^(([^:/?#]+):)?(//([^:/?#]*)(:([0-9]+)?)?)?([^?#]*)(\\?([^#]*))?(#(.*))?"
-                                                           uri :sharedp #f))))
-       (flet ((process (index)
-                (bind ((piece (aref pieces index)))
-                  (values (if (and piece
-                                   (not (zerop (length piece))))
-                              (uri/percent-encoding/decode piece)
-                              nil)))))
-         (declare (inline process)
-                  (dynamic-extent #'process))
-         ;; call uri/percent-encoding/decode on each piece separately, so some of them may remain simple-base-string even if other pieces contain unicode
-         (aprog1
-             (make-uri :scheme   (bind ((scheme (aref pieces 1)))
-                                   (when (and scheme
-                                              (not (is-string-ok? scheme +uri/character-ok-table/scheme+)))
-                                     (uri-parse-error "Scheme ~S contains illegal characters" scheme))
-                                   scheme)
-                       :host     (awhen (aref pieces 3)
-                                   (uri/percent-encoding/decode it))
-                       :port     (bind ((port-string (aref pieces 5)))
-                                   (when port-string
-                                     (bind (((:values port position) (parse-integer port-string :junk-allowed #t)))
-                                       (when (or (< port 0)
-                                                 (not (eql position (length port-string))))
-                                         (uri-parse-error "Port ~S is not a non-negative integer" port-string))
-                                       port)))
-                       :path     (mapcar 'uri/percent-encoding/decode (uri/split-path (aref pieces 6)))
-                       :path-had-leading-slash? (ends-with #\/ (aref pieces 6))
-                       :query    (aref pieces 8) ; see URI/PARSE-QUERY-PARAMETERS
-                       :fragment (process 10))
-           (unless lazy
-             (query-parameters-of it))))))
-    (string
-     (parse-uri (coerce uri 'simple-base-string)))))
+(def (function eo) parse-uri (uri-string &key (lazy #f))
+  "Parse a percent-encoded URI string into an object of type URI."
+  (bind ((*uri-string* uri-string))
+    (with-resignalled-errors
+      (labels ((parse (uri-string)
+                 (declare (type simple-base-string uri-string))
+                 ;; can't use :sharedp, because we expect the returned pieces to be simple-base-string's and :sharedp would return displaced arrays
+                 (bind ((pieces (nth-value 1 (cl-ppcre:scan-to-strings "^(([^:/?#]+):)?(//([^:/?#]*)(:([0-9]+)?)?)?([^?#]*)(\\?([^#]*))?(#(.*))?"
+                                                                       uri-string :sharedp #f))))
+                   (flet ((process (index)
+                            (bind ((piece (aref pieces index)))
+                              (values (if (and piece
+                                               (not (zerop (length piece))))
+                                          (uri/percent-encoding/decode piece)
+                                          nil)))))
+                     (declare (inline process)
+                              (dynamic-extent #'process))
+                     ;; call uri/percent-encoding/decode on each piece separately, so some of them may remain simple-base-string even if other pieces contain unicode
+                     (aprog1
+                         (make-uri :scheme   (bind ((scheme (aref pieces 1)))
+                                               (when (and scheme
+                                                          (not (is-string-ok? scheme +uri/character-ok-table/scheme+)))
+                                                 (uri-parse-error "Scheme ~S contains illegal characters" scheme))
+                                               scheme)
+                                   :host     (awhen (aref pieces 3)
+                                               (uri/percent-encoding/decode it))
+                                   :port     (bind ((port-string (aref pieces 5)))
+                                               (when port-string
+                                                 (bind (((:values port position) (parse-integer port-string :junk-allowed #t)))
+                                                   (when (or (< port 0)
+                                                             (not (eql position (length port-string))))
+                                                     (uri-parse-error "Port ~S is not a non-negative integer" port-string))
+                                                   port)))
+                                   :path     (mapcar 'uri/percent-encoding/decode (uri/split-path (aref pieces 6)))
+                                   :path-had-leading-slash? (ends-with #\/ (aref pieces 6))
+                                   :query    (aref pieces 8) ; see URI/PARSE-QUERY-PARAMETERS
+                                   :fragment (process 10))
+                       (unless lazy
+                         (query-parameters-of it)))))))
+        (etypecase uri-string
+          (simple-base-string
+           (parse uri-string))
+          (string
+           (parse (handler-bind ((type-error (lambda (error)
+                                               (uri-parse-error/nested error "~S: failed to coerce input to ~S" 'parse-uri 'simple-base-string))))
+                    (coerce uri-string 'simple-base-string)))))))))
 
 ;;;;;;
 ;;; query parameters
