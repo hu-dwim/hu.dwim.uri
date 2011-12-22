@@ -51,7 +51,7 @@
 (def (constant :test 'equalp) +character-ok-table+ (to-character-ok-table +allowed-characters+))
 (def (constant :test 'equalp) +character-ok-table/scheme+ (to-character-ok-table +allowed-characters/scheme+))
 
-(def (function io) split-path (path-string)
+(def (function eio) split-path (path-string)
   (split-sequence #\/ path-string :remove-empty-subseqs #t))
 
 ;;;;;;
