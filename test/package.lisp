@@ -6,10 +6,11 @@
 
 (in-package :hu.dwim.def)
 
-(def package :hu.dwim.util.test
+(def package :hu.dwim.uri.test
   (:use :hu.dwim.common
         :hu.dwim.def
         :hu.dwim.stefil
         :hu.dwim.syntax-sugar
+        :hu.dwim.uri
         :hu.dwim.util)
-  (:readtable-setup (setup-readtable/same-as-package :hu.dwim.util)))
+  (:readtable-setup (setup-readtable/same-as-package :hu.dwim.uri)))

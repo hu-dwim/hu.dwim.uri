@@ -6,11 +6,11 @@
 
 (in-package :hu.dwim.def)
 
-(def package :hu.dwim.util.documentation
+(def package :hu.dwim.uri.documentation
   (:use :hu.dwim.asdf
         :hu.dwim.def
         :hu.dwim.defclass-star
         :hu.dwim.presentation
         :hu.dwim.syntax-sugar
-        :hu.dwim.util)
+        :hu.dwim.uri)
   (:readtable-setup (setup-readtable/same-as-package :hu.dwim.presentation)))

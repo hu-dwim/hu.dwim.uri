@@ -4,9 +4,9 @@
 ;;;
 ;;; See LICENCE for details.
 
-(in-package :hu.dwim.util.documentation)
+(in-package :hu.dwim.uri.documentation)
 
-(def project :hu.dwim.util)
+(def project :hu.dwim.uri)
 
 (def book user-guide (:title "User guide")
   (chapter (:title "Introduction")

@@ -4,6 +4,6 @@
 ;;;
 ;;; See LICENCE for details.
 
-(in-package :hu.dwim.util.test)
+(in-package :hu.dwim.uri.test)
 
 (def suite* (test :in root-suite))

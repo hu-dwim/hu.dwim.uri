@@ -8,11 +8,12 @@
 
 (in-package :hu.dwim.asdf)
 
-(defsystem :hu.dwim.util.uri
+(defsystem :hu.dwim.uri
   :class hu.dwim.system
   :depends-on (:babel
                :cl-ppcre
-               :hu.dwim.util+iolib
+               :hu.dwim.util
                :iolib.sockets)
   :components ((:module "source"
-                :components ((:file "uri")))))
+                :components ((:file "package")
+                             (:file "uri" :depends-on ("package"))))))

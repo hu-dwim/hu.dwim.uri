@@ -4,7 +4,7 @@
 ;;;
 ;;; See LICENCE for details.
 
-(in-package :hu.dwim.util)
+(in-package :hu.dwim.uri)
 
 ;; http://tools.ietf.org/html/rfc2396
 

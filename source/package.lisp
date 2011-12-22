@@ -6,11 +6,12 @@
 
 (in-package :hu.dwim.def)
 
-(def package :hu.dwim.util
+(def package :hu.dwim.uri
   (:use :hu.dwim.asdf
         :hu.dwim.common
         :hu.dwim.def
-        :hu.dwim.syntax-sugar)
+        :hu.dwim.syntax-sugar
+        :hu.dwim.util)
   (:export
    #:host
    #:port
