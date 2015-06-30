@@ -10,7 +10,7 @@
   :depends-on (:babel
                :cl-ppcre
                :hu.dwim.util
-               :iolib.sockets)
+               :iolib/sockets)
   :components ((:module "source"
                 :components ((:file "package")
                              (:file "uri" :depends-on ("package"))))))
