@@ -185,8 +185,15 @@
         (copy-alist (query-parameters-of from))))
 
 (def (function e) append-path (uri path)
+  (check-type path (or string list))
   (bind ((path (if (stringp path) (split-path path) path)))
     (setf (path-of uri) (append (path-of uri) path)))
+  uri)
+
+(def (function e) append-to-last-path-element (uri string)
+  (check-type string string)
+  (bind ((last (last (path-of uri))))
+    (setf (car last) (string+ (car last) string)))
   uri)
 
 (def (function e) prepend-path (uri path)
