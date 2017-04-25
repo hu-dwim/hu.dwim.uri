@@ -134,14 +134,17 @@
 (def (function ie) clone-uri (uri &key (scheme nil scheme-provided?) (host nil host-provided?) (port nil port-provided?)
                                   (path nil path-provided?) (query nil query-provided?) (fragment nil fragment-provided?))
   "Clone URI with any provided components fully overriding its components (e.g. no path merging)."
-  (bind ((result #.`(make-instance 'uri
-                                   ,@(iter (for name :in '(scheme host port path query fragment))
-                                           (collect (intern (string name) :keyword))
-                                           (collect `(if ,(symbolicate name '#:-provided?)
-                                                         ,name
-                                                         (,(symbolicate name '#:-of) uri)))))))
+  (bind ((result (make-instance 'uri
+                                :scheme (if scheme-provided? scheme (scheme-of uri))
+                                :host (if host-provided? host (host-of uri))
+                                :port (if port-provided? port (port-of uri))
+                                :path (if path-provided? path (copy-list (path-of uri)))
+                                :query (if query-provided? query (query-of uri))
+                                :fragment (if fragment-provided? fragment (fragment-of uri))
+                                :path-had-leading-slash? (path-had-leading-slash? uri))))
     (when (and (not query-provided?)
                (slot-boundp uri 'query-parameters))
+      ;; only copy the cache if the QUERY slot was not overridden
       (setf (query-parameters-of result) (copy-alist (query-parameters-of uri))))
     result))
 
