@@ -380,6 +380,11 @@
                                                (uri-parse-error/nested error "~S: failed to coerce input to ~S" 'parse-uri 'simple-base-string))))
                     (coerce uri-string 'simple-base-string)))))))))
 
+(def (function eo) ensure-parsed-uri (uri)
+  (etypecase uri
+    (uri uri)
+    (string (parse-uri uri))))
+
 ;;;;;;
 ;;; query parameters
 
