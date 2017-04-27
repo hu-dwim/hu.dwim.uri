@@ -52,7 +52,10 @@
 (def (constant :test 'equalp) +character-ok-table/scheme+ (to-character-ok-table +allowed-characters/scheme+))
 
 (def (function eio) split-path (path-string)
-  (split-sequence #\/ path-string :remove-empty-subseqs #t))
+  "Returns (values list-of-path-elements ends-with-slash?)"
+  (check-type path-string string)
+  (values (split-sequence #\/ path-string :remove-empty-subseqs #t)
+          (ends-with path-string #\/)))
 
 ;;;;;;
 ;;; conditions
@@ -189,8 +192,12 @@
 
 (def (function e) append-path (uri path)
   (check-type path (or string list))
-  (bind ((path (if (stringp path) (split-path path) path)))
-    (setf (path-of uri) (append (path-of uri) path)))
+  (bind (((:values path leading-slash?) (if (stringp path)
+                                            (split-path path)
+                                            path)))
+    (setf (path-of uri) (append (path-of uri) path))
+    ;; if we append a list, then we clear it unconditionally
+    (setf (path-had-leading-slash? uri) leading-slash?))
   uri)
 
 (def (function e) append-to-last-path-element (uri string)
